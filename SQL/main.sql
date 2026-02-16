@@ -150,8 +150,8 @@ CREATE PROCEDURE SP_Update_Inv
 @ID_item int 
 AS BEGIN
 UPDATE Inventario
-SET ID_Jugador = @ID_jugador
-WHERE ID_Item = @ID_item
+SET ID_Item = @ID_Item
+WHERE ID_Jugador = @ID_Jugador
 END;
 GO
 
