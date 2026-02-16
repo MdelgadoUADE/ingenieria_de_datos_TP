@@ -25,14 +25,14 @@ CREATE TABLE Gremio
 )
 GO
 
-CREATE TABLE Admin
+CREATE TABLE Administrador
 (
     ID_Jugador INT PRIMARY KEY,
     Nombre_Admin VARCHAR(50)
 
 )
 
-ALTER TABLE Admin
+ALTER TABLE Administrador
 ADD CONSTRAINT FK_Jugador_Admin
 FOREIGN KEY (ID_Jugador)
 REFERENCES Jugador(ID_Jugador)
@@ -103,7 +103,7 @@ CREATE PROCEDURE Insertar_Admin
 
 AS
 BEGIN
-    INSERT INTO Admin (ID_Jugador, Nombre_Admin)
+    INSERT INTO Administrador (ID_Jugador, Nombre_Admin)
     VALUES (@ID_Jugador, @Nombre_Admin)
 END
 GO
@@ -116,7 +116,7 @@ CREATE PROCEDURE Modificar_Admin
 
 AS
 BEGIN
-    UPDATE Admin
+    UPDATE Administrador
     SET Nombre_Admin = @Nombre_Admin
     WHERE ID_Jugador = @ID_Jugador
 END
@@ -128,8 +128,66 @@ CREATE PROCEDURE EliminarAdmin
 
 AS
 BEGIN
-    DELETE FROM Admin
+    DELETE FROM Administrador
     WHERE ID_Jugador = @ID_Jugador
 END
 GO
 
+
+--Tabla inventario
+
+CREATE PROCEDURE SP_Insert_Inv
+@ID_jugador int,
+@ID_item int
+AS BEGIN
+INSERT INTO Inventario(ID_Jugador, ID_Item) VALUES
+(@ID_jugador, @ID_item)
+END;
+GO
+
+CREATE PROCEDURE SP_Update_Inv
+@ID_jugador int,
+@ID_item int 
+AS BEGIN
+UPDATE Inventario
+SET ID_Jugador = @ID_jugador
+WHERE ID_Item = @ID_item
+END;
+GO
+
+CREATE PROCEDURE SP_Delete_Inv
+@ID_jugador int
+AS BEGIN
+DELETE FROM Inventario
+WHERE ID_jugador = @ID_jugador
+END;
+GO
+
+
+--Tabla NPC
+
+CREATE PROCEDURE SP_Insert_NPC
+@ID_vendedor int,
+AS BEGIN
+INSERT INTO Vendedor_NPC(ID_Vendedor) VALUES
+(@ID_vendedor)
+END;
+GO
+
+
+CREATE PROCEDURE SP_Update_NPC
+@ID_vendedor int,
+AS BEGIN
+UPDATE Vendedor_NPC
+WHERE ID_Vendedor = @ID_Vendedor
+END;
+GO
+
+
+CREATE PROCEDURE SP_Delete_NPC
+@ID_vendedor int
+AS BEGIN
+DELETE FROM Vendedor_NPC
+WHERE ID_Vendedor = @ID_Vendedor
+END;
+GO
