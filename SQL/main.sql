@@ -1,7 +1,8 @@
 CREATE DATABASE main_runescape
+GO
 
 USE main_runescape
-GO;
+GO
 
 --Tablas
 
@@ -23,24 +24,9 @@ CREATE TABLE entidad(
 
     CONSTRAINT CHK_tipo CHECK (tipo IN ('jug', 'npc')),
 
-    CONSTRAINT CHK_oro_disponible CHECK (oro_disponible > 0),
-
-    CONSTRAINT FK_ID_gremio FOREIGN KEY (ID_gremio) 
-    REFERENCES GREMIO(ID_gremio)
+    CONSTRAINT CHK_oro_disponible CHECK (oro_disponible > 0)
 );
-
-CREATE TABLE jugador(
-    ID_jugador INT PRIMARY KEY NOT NULL,
-    ID_gremio INT,
-
-    CONSTRAINT FK_ID_jugador FOREIGN KEY (ID_jugador)
-    REFERENCES entidad(ID_entidad),
-
-    CONSTRAINT FK_ID_gremio FOREIGN KEY (ID_gremio) 
-    REFERENCES GREMIO(ID_gremio),
-
-    CONSTRAINT CHK_ID_jugador CHECK (ID_jugador BETWEEN 10000000 AND 99999999)
-);
+GO
 
 CREATE TABLE vendedor_npc(
     ID_vendedor INT PRIMARY KEY NOT NULL,
@@ -52,19 +38,18 @@ CREATE TABLE vendedor_npc(
     CHECK (ID_Vendedor BETWEEN 10000 AND 99999)
 );
 
-CREATE TABLE inventario(
-    ID_jugador INT PRIMARY KEY,
-    ID_Item INT NOT NULL,
+CREATE TABLE jugador(
+    ID_jugador INT PRIMARY KEY NOT NULL,
+    ID_gremio INT,
 
-    CONSTRAINT FK_IDjug_Inv
-    FOREIGN KEY (ID_jugador) REFERENCES jugador(ID_jugador),
-    CONSTRAINT FK_IDitem_Inv
-    FOREIGN KEY (ID_Item) REFERENCES Item(ID_Item)
+    CONSTRAINT FK_ID_jugador FOREIGN KEY (ID_jugador)
+    REFERENCES entidad(ID_entidad),
+
+    CONSTRAINT CHK_ID_jugador CHECK (ID_jugador BETWEEN 10000000 AND 99999999)
 );
+GO
 
-
-CREATE TABLE gremio
-(
+CREATE TABLE gremio(
 	ID_Gremio INT PRIMARY KEY,
 	Nombre_Gremio VARCHAR(50),
 	Fondo INT,
@@ -77,15 +62,29 @@ CREATE TABLE gremio
     REFERENCES jugador(ID_jugador)
 );
 
-CREATE TABLE Administrador
-(
+ALTER TABLE jugador
+ADD CONSTRAINT FK_ID_gremio FOREIGN KEY (ID_gremio) 
+REFERENCES gremio(ID_gremio)
+GO
+
+CREATE TABLE inventario(
+    ID_jugador INT PRIMARY KEY,
+    ID_Item INT NOT NULL,
+
+    CONSTRAINT FK_IDjug_Inv
+    FOREIGN KEY (ID_jugador) REFERENCES jugador(ID_jugador),
+    CONSTRAINT FK_IDitem_Inv
+    FOREIGN KEY (ID_Item) REFERENCES Item(ID_Item)
+);
+
+CREATE TABLE Administrador(
     ID_admin INT,
     Nombre_Admin VARCHAR(50)
 
     CONSTRAINT FK_Jugador_Admin FOREIGN KEY (ID_admin)
     REFERENCES jugador(ID_jugador)
 
-    CONSTRAINT PK_admin PRIMARY KEY (ID_admin,Nombre_Admin)
+    CONSTRAINT PK_admin PRIMARY KEY (ID_admin, Nombre_Admin)
 );
 
 CREATE TABLE propietario(
@@ -104,11 +103,13 @@ CREATE TABLE propietario(
 
     CONSTRAINT PK_Propietario PRIMARY KEY (ID_Item_propiedad,ID_Jugador,ID_vendedor)
 )
+GO
+
 
 --Procedimientos
+
 --  Tabla ITEM
 
-GO;
 CREATE PROCEDURE Insertar_Item
 @ID_item INT,
 @grado INT,
@@ -122,11 +123,11 @@ BEGIN
 END
 
 
-GO;
+GO
+
 --  Tabla Gremio
 
 CREATE PROCEDURE Insertar_gremio
-
 @ID_Gremio INT,
 @Nombre_Gremio VARCHAR(50),
 @Fondo DECIMAL(10,2),
@@ -172,38 +173,38 @@ GO
 
 CREATE PROCEDURE Insertar_Admin
 
-@ID_entidad INT,
+@ID_admin INT,
 @Nombre_Admin VARCHAR(50)
 
 AS
 BEGIN
-    INSERT INTO Administrador (ID_entidad, Nombre_Admin)
-    VALUES (@ID_entidad, @Nombre_Admin)
+    INSERT INTO Administrador (ID_admin, Nombre_Admin)
+    VALUES (@ID_admin, @Nombre_Admin)
 END
 GO
 
 
 CREATE PROCEDURE Modificar_Admin
 
-@ID_entidad INT,
+@ID_admin INT,
 @Nombre_Admin VARCHAR(50)
 
 AS
 BEGIN
     UPDATE Administrador
     SET Nombre_Admin = @Nombre_Admin
-    WHERE ID_entidad = @ID_entidad
+    WHERE ID_admin = @ID_admin
 END
 GO
 
 CREATE PROCEDURE EliminarAdmin
 
-@ID_entidad INT
+@ID_admin INT
 
 AS
 BEGIN
     DELETE FROM Administrador
-    WHERE ID_entidad = @ID_entidad
+    WHERE ID_admin = @ID_admin
 END
 GO
 
@@ -211,53 +212,53 @@ GO
 --Tabla inventario
 
 CREATE PROCEDURE SP_Insert_Inv
-@ID_entidad int,
+@ID_jugador int,
 @ID_item int
 AS BEGIN
-INSERT INTO Inventario(ID_entidad, ID_Item) VALUES
-(@ID_entidad, @ID_item)
+INSERT INTO Inventario(ID_jugador, ID_Item) VALUES
+(@ID_jugador, @ID_item)
 END;
 GO
 
 CREATE PROCEDURE SP_Update_Inv
-@ID_entidad int,
+@ID_jugador int,
 @ID_item int 
 AS BEGIN
 UPDATE Inventario
 SET ID_Item = @ID_Item
-WHERE ID_entidad = @ID_entidad
+WHERE ID_jugador = @ID_jugador
 END;
 GO
 
 CREATE PROCEDURE SP_Delete_Inv
-@ID_entidad int
+@ID_jugador int
 AS BEGIN
 DELETE FROM Inventario
-WHERE ID_entidad = @ID_entidad
+WHERE ID_jugador = @ID_jugador
 END;
 
-GO;
+GO
 
 
 --Tabla NPC
 
 CREATE PROCEDURE SP_Insert_NPC
-@ID_vendedor int,
+@ID_vendedor int
 AS BEGIN
 INSERT INTO Vendedor_NPC(ID_Vendedor) VALUES
 (@ID_vendedor)
 END;
 
-GO;
+GO
 
 CREATE PROCEDURE SP_Update_NPC
-@ID_vendedor int,
+@ID_vendedor int
 AS BEGIN
 UPDATE Vendedor_NPC
-WHERE ID_Vendedor = @ID_Vendedor
+SET ID_Vendedor = @ID_Vendedor
 END;
 
-GO;
+GO
 
 CREATE PROCEDURE SP_Delete_NPC
 @ID_vendedor int
@@ -266,4 +267,4 @@ DELETE FROM Vendedor_NPC
 WHERE ID_Vendedor = @ID_Vendedor
 END;
 
-GO;
+GO
