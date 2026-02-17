@@ -88,6 +88,23 @@ CREATE TABLE Administrador
     CONSTRAINT PK_admin PRIMARY KEY (ID_admin,Nombre_Admin)
 );
 
+CREATE TABLE propietario(
+    ID_Item_propiedad INT NOT NULL,
+    ID_Jugador INT,
+    ID_vendedor INT,
+
+    CONSTRAINT FK_Item_Prop FOREIGN KEY (ID_Item_propiedad)
+    REFERENCES item(ID_item),
+
+    CONSTRAINT FK_Jugador_Prop FOREIGN KEY (ID_Jugador)
+    REFERENCES jugador(ID_jugador),
+
+    CONSTRAINT FK_Vendedor_Prop FOREIGN KEY (ID_vendedor)
+    REFERENCES vendedor_npc(ID_vendedor),
+
+    CONSTRAINT PK_Propietario PRIMARY KEY (ID_Item_propiedad,ID_Jugador,ID_vendedor)
+)
+
 --Procedimientos
 --  Tabla ITEM
 
@@ -218,7 +235,8 @@ AS BEGIN
 DELETE FROM Inventario
 WHERE ID_entidad = @ID_entidad
 END;
-GO
+
+GO;
 
 
 --Tabla NPC
@@ -229,8 +247,8 @@ AS BEGIN
 INSERT INTO Vendedor_NPC(ID_Vendedor) VALUES
 (@ID_vendedor)
 END;
-GO
 
+GO;
 
 CREATE PROCEDURE SP_Update_NPC
 @ID_vendedor int,
@@ -238,8 +256,8 @@ AS BEGIN
 UPDATE Vendedor_NPC
 WHERE ID_Vendedor = @ID_Vendedor
 END;
-GO
 
+GO;
 
 CREATE PROCEDURE SP_Delete_NPC
 @ID_vendedor int
@@ -247,4 +265,5 @@ AS BEGIN
 DELETE FROM Vendedor_NPC
 WHERE ID_Vendedor = @ID_Vendedor
 END;
-GO
+
+GO;
