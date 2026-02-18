@@ -1,3 +1,5 @@
+
+
 CREATE DATABASE main_runescape
 GO
 
@@ -109,7 +111,7 @@ create table Seguimiento_Venta(
     id_venta INT IDENTITY(1,1) NOT NULL,
     timestamp_venta DATETIME NOT NULL DEFAULT SYSDATETIME(),
     tipo_venta VARCHAR(20) NOT NULL,
-    estado VARCHAR(12) NOT NULL DEFAULT 'COMPLETADA'
+    estado VARCHAR(15) NOT NULL DEFAULT 'COMPLETADA',
 
     CONSTRAINT CK_SeguimientoVenta_Tipo
         CHECK (tipo_venta IN ('PRIVADA','NPC')),
