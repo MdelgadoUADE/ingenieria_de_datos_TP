@@ -16,6 +16,8 @@ CREATE TABLE item(
     CONSTRAINT CHK_grado CHECK (grado > 0 AND grado <= 70)
 );
 
+--hola
+
 CREATE TABLE entidad(
     ID_entidad INT PRIMARY KEY NOT NULL,
     tipo VARCHAR(3),
