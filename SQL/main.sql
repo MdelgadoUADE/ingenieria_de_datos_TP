@@ -16,7 +16,6 @@ CREATE TABLE item(
     CONSTRAINT CHK_grado CHECK (grado > 0 AND grado <= 70)
 );
 
---hola
 
 CREATE TABLE entidad(
     ID_entidad INT PRIMARY KEY NOT NULL,
@@ -105,7 +104,99 @@ CREATE TABLE propietario(
 
     CONSTRAINT PK_Propietario PRIMARY KEY (ID_Item_propiedad,ID_Jugador,ID_vendedor)
 )
+
+create table Seguimiento_Venta(
+    id_venta INT IDENTITY(1,1) NOT NULL,
+    timestamp_venta DATETIME NOT NULL DEFAULT SYSDATETIME(),
+    tipo_venta VARCHAR(20) NOT NULL,
+    estado VARCHAR(12) NOT NULL DEFAULT 'COMPLETADA'
+
+    CONSTRAINT CK_SeguimientoVenta_Tipo
+        CHECK (tipo_venta IN ('PRIVADA','NPC')),
+
+    CONSTRAINT CK_SeguimientoVenta_Estado
+        CHECK (estado IN ('PENDIENTE','COMPLETADA','CANCELADA')),
+
+    CONSTRAINT PK_Seguimiento_Venta
+        PRIMARY KEY (id_venta),
+);
+
+create table Detalle_Venta (
+    id_venta INT NOT NULL,
+    id_item INT NOT NULL,
+    oro_item INT NULL,
+
+    CONSTRAINT PK_Detalle_Venta
+        PRIMARY KEY (id_venta, id_item),
+
+    CONSTRAINT FK_DetalleVenta_Venta
+        FOREIGN KEY (id_venta)
+        REFERENCES Seguimiento_Venta(id_venta)
+        ON DELETE CASCADE,
+
+    CONSTRAINT FK_DetalleVenta_Item
+        FOREIGN KEY (id_item)
+        REFERENCES Item(id_item)
+);
+
+CREATE TABLE Seguimiento_Venta_Privado (
+    id_venta INT NOT NULL,
+    id_jugador_emisor INT NOT NULL,
+    id_jugador_receptor INT NOT NULL,
+    oro_total INT NULL,
+
+    CONSTRAINT PK_Seguimiento_Venta_Privado
+        PRIMARY KEY (id_venta),
+
+    CONSTRAINT FK_Privado_Venta
+        FOREIGN KEY (id_venta)
+        REFERENCES Seguimiento_Venta(id_venta)
+        ON DELETE CASCADE,
+
+    CONSTRAINT FK_Privado_Emisor
+        FOREIGN KEY (id_jugador_emisor)
+        REFERENCES Jugador(id_jugador),
+
+    CONSTRAINT FK_Privado_Receptor
+        FOREIGN KEY (id_jugador_receptor)
+        REFERENCES Jugador(id_jugador),
+
+    CONSTRAINT CK_Privado_JugadoresDistintos
+        CHECK (id_jugador_emisor <> id_jugador_receptor)
+);
+
+CREATE TABLE Seguimiento_Venta_NPC (
+    id_venta INT NOT NULL,
+    id_jugador INT NOT NULL,
+    id_vendedor_npc INT NOT NULL,
+    es_compra BIT NOT NULL,
+    id_gremio_pagador INT NULL,
+    oro_total INT NOT NULL,
+
+    CONSTRAINT PK_Seguimiento_Venta_NPC
+        PRIMARY KEY (id_venta),
+
+    CONSTRAINT FK_NPC_Venta
+        FOREIGN KEY (id_venta)
+        REFERENCES Seguimiento_Venta(id_venta)
+        ON DELETE CASCADE,
+
+    CONSTRAINT FK_NPC_Jugador
+        FOREIGN KEY (id_jugador)
+        REFERENCES Jugador(id_jugador),
+
+    CONSTRAINT FK_NPC_Vendedor
+        FOREIGN KEY (id_vendedor_npc)
+        REFERENCES Vendedor_NPC(id_vendedor),
+
+    CONSTRAINT FK_NPC_Gremio
+        FOREIGN KEY (id_gremio_pagador)
+        REFERENCES Gremio(id_gremio)
+);
+
 GO
+
+
 
 
 --Procedimientos
