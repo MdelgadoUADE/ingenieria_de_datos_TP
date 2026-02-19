@@ -52,7 +52,7 @@ CREATE TABLE vendedor_npc(
     CHECK (ID_Vendedor BETWEEN 10000 AND 99999)
 );
 
-CREATE TABLE inventario(
+CREATE TABLE item_en_inventario(
     ID_jugador INT PRIMARY KEY,
     ID_Item INT NOT NULL,
 
@@ -78,20 +78,21 @@ CREATE TABLE gremio
 );
 
 CREATE TABLE Administrador
-(
-    ID_admin INT,
+(   
+    ID_jugador INT,
     Nombre_Admin VARCHAR(50)
 
-    CONSTRAINT FK_Jugador_Admin FOREIGN KEY (ID_admin)
+    CONSTRAINT FK_Jugador_Admin FOREIGN KEY (ID_jugador)
     REFERENCES jugador(ID_jugador)
 
-    CONSTRAINT PK_admin PRIMARY KEY (ID_admin,Nombre_Admin)
+    CONSTRAINT PK_admin PRIMARY KEY (ID_jugador,Nombre_Admin)
 );
 
 CREATE TABLE propietario(
     ID_Item_propiedad INT NOT NULL,
     ID_Jugador INT,
     ID_vendedor INT,
+    ID_mazmorra INT,
 
     CONSTRAINT FK_Item_Prop FOREIGN KEY (ID_Item_propiedad)
     REFERENCES item(ID_item),
@@ -101,6 +102,9 @@ CREATE TABLE propietario(
 
     CONSTRAINT FK_Vendedor_Prop FOREIGN KEY (ID_vendedor)
     REFERENCES vendedor_npc(ID_vendedor),
+
+    CONSTRAINT FK_Mazmorra_Prop FOREIGN KEY (ID_mazmorra)
+    REFERENCES mazmorra(ID_mazmorra),
 
     CONSTRAINT PK_Propietario PRIMARY KEY (ID_Item_propiedad,ID_Jugador,ID_vendedor)
 )
@@ -208,13 +212,13 @@ END
 GO
 
 
---Tabla inventario
+--Tabla item_en_inventario
 
 CREATE PROCEDURE SP_Insert_Inv
 @ID_entidad int,
 @ID_item int
 AS BEGIN
-INSERT INTO Inventario(ID_entidad, ID_Item) VALUES
+INSERT INTO item_en_inventario(ID_entidad, ID_Item) VALUES
 (@ID_entidad, @ID_item)
 END;
 GO
@@ -223,7 +227,7 @@ CREATE PROCEDURE SP_Update_Inv
 @ID_entidad int,
 @ID_item int 
 AS BEGIN
-UPDATE Inventario
+UPDATE item_en_inventario
 SET ID_Item = @ID_Item
 WHERE ID_entidad = @ID_entidad
 END;
@@ -232,7 +236,7 @@ GO
 CREATE PROCEDURE SP_Delete_Inv
 @ID_entidad int
 AS BEGIN
-DELETE FROM Inventario
+DELETE FROM item_en_inventario
 WHERE ID_entidad = @ID_entidad
 END;
 
