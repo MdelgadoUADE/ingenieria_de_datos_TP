@@ -1,4 +1,9 @@
-
+/*
+usar para probar errores de ejecucion:
+(cerrar diagramas)
+use master
+drop database main_runescape;
+*/
 
 CREATE DATABASE main_runescape
 GO
