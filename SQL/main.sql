@@ -53,7 +53,7 @@ CREATE TABLE vendedor_npc(
 );
 
 CREATE TABLE item_en_inventario(
-    ID_jugador INT PRIMARY KEY,
+    ID_jugador INT PRIMARY KEY NOT NULL,
     ID_Item INT NOT NULL,
 
     CONSTRAINT FK_IDjug_Inv
@@ -107,6 +107,33 @@ CREATE TABLE propietario(
     REFERENCES mazmorra(ID_mazmorra),
 
     CONSTRAINT PK_Propietario PRIMARY KEY (ID_Item_propiedad,ID_Jugador,ID_vendedor)
+)
+
+CREATE TABLE mazmorra(
+    ID_mazmorra INT PRIMARY KEY,
+    nivel INT,
+    ID_Gremio INT,
+    ID_Item INT,
+
+    CONSTRAINT FK_Gremio_Mazmorra FOREIGN KEY (ID_Gremio)
+    REFERENCES gremio(ID_Gremio),
+
+    CONSTRAINT FK_Item_Mazmorra FOREIGN KEY (ID_Item)
+    REFERENCES item(ID_item),
+
+    CONSTRAINT CHK_nivel CHECK (nivel > 0 AND nivel <= 61)
+)
+
+CREATE TABLE drop_table(
+    ID_mazmorra INT PRIMARY KEY NOT NULL,
+    categoria VARCHAR(20) NOT NULL,
+    drop_rate INT DEFAULT 1,
+
+    CONSTRAINT FK_Mazmorra_DT FOREIGN KEY (ID_mazmorra)
+    REFERENCES mazmorra(ID_mazmorra),
+
+    CONSTRAINT CHK_drop_rate CHECK (drop_rate > 0 AND drop_rate <= 100)
+
 )
 
 --Procedimientos
