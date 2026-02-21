@@ -6,9 +6,10 @@ drop database main_runescape;
 */
 
 CREATE DATABASE main_runescape
+GO
 
 USE main_runescape
-GO;
+GO
 
 --Tablas
 
@@ -21,6 +22,18 @@ CREATE TABLE item(
 
     CONSTRAINT CHK_grado CHECK (grado > 0 AND grado <= 70)
 );
+GO
+
+CREATE TABLE gremio(
+	ID_Gremio INT PRIMARY KEY,
+	Nombre_Gremio VARCHAR(50),
+	Fondo INT,
+	ID_Lider INT,
+
+    CONSTRAINT CHK_ID_Gremio CHECK (ID_Gremio BETWEEN 100 AND 999),
+    CONSTRAINT CHK_fondo CHECK (Fondo > 0),
+);
+GO
 
 CREATE TABLE entidad(
     ID_entidad INT PRIMARY KEY NOT NULL,
@@ -30,11 +43,9 @@ CREATE TABLE entidad(
 
     CONSTRAINT CHK_tipo CHECK (tipo IN ('jug', 'npc')),
 
-    CONSTRAINT CHK_oro_disponible CHECK (oro_disponible > 0),
-
-    CONSTRAINT FK_ID_gremio FOREIGN KEY (ID_gremio) 
-    REFERENCES GREMIO(ID_gremio)
+    CONSTRAINT CHK_oro_disponible CHECK (oro_disponible > 0)
 );
+GO
 
 CREATE TABLE jugador(
     ID_jugador INT PRIMARY KEY NOT NULL,
@@ -48,6 +59,13 @@ CREATE TABLE jugador(
 
     CONSTRAINT CHK_ID_jugador CHECK (ID_jugador BETWEEN 10000000 AND 99999999)
 );
+GO
+
+ALTER TABLE Gremio
+ADD 
+CONSTRAINT FK_Jugador_Gremio FOREIGN KEY (ID_Lider)
+REFERENCES jugador(ID_jugador)
+GO
 
 CREATE TABLE vendedor_npc(
     ID_vendedor INT PRIMARY KEY NOT NULL,
@@ -58,6 +76,7 @@ CREATE TABLE vendedor_npc(
     CONSTRAINT CH_NPC_5dig
     CHECK (ID_Vendedor BETWEEN 10000 AND 99999)
 );
+GO
 
 CREATE TABLE item_en_inventario(
     ID_jugador INT PRIMARY KEY NOT NULL,
@@ -68,24 +87,9 @@ CREATE TABLE item_en_inventario(
     CONSTRAINT FK_IDitem_Inv
     FOREIGN KEY (ID_Item) REFERENCES Item(ID_Item)
 );
+GO
 
-
-CREATE TABLE gremio
-(
-	ID_Gremio INT PRIMARY KEY,
-	Nombre_Gremio VARCHAR(50),
-	Fondo INT,
-	ID_Lider INT,
-
-    CONSTRAINT CHK_ID_Gremio CHECK (ID_Gremio BETWEEN 100 AND 999),
-    CONSTRAINT CHK_fondo CHECK (Fondo > 0),
-
-    CONSTRAINT FK_Jugador_Gremio FOREIGN KEY (ID_Lider)
-    REFERENCES jugador(ID_jugador)
-);
-
-CREATE TABLE Administrador
-(   
+CREATE TABLE Administrador(   
     ID_jugador INT,
     Nombre_Admin VARCHAR(50)
 
@@ -94,6 +98,23 @@ CREATE TABLE Administrador
 
     CONSTRAINT PK_admin PRIMARY KEY (ID_jugador,Nombre_Admin)
 );
+GO
+
+CREATE TABLE mazmorra(
+    ID_mazmorra INT PRIMARY KEY,
+    nivel INT,
+    ID_Gremio INT,
+    ID_Item INT,
+
+    CONSTRAINT FK_Gremio_Mazmorra FOREIGN KEY (ID_Gremio)
+    REFERENCES gremio(ID_Gremio),
+
+    CONSTRAINT FK_Item_Mazmorra FOREIGN KEY (ID_Item)
+    REFERENCES item(ID_item),
+
+    CONSTRAINT CHK_nivel CHECK (nivel > 0 AND nivel <= 61)
+);
+GO
 
 CREATE TABLE propietario(
     ID_Item_propiedad INT NOT NULL,
@@ -114,22 +135,8 @@ CREATE TABLE propietario(
     REFERENCES mazmorra(ID_mazmorra),
 
     CONSTRAINT PK_Propietario PRIMARY KEY (ID_Item_propiedad,ID_Jugador,ID_vendedor)
-)
-
-CREATE TABLE mazmorra(
-    ID_mazmorra INT PRIMARY KEY,
-    nivel INT,
-    ID_Gremio INT,
-    ID_Item INT,
-
-    CONSTRAINT FK_Gremio_Mazmorra FOREIGN KEY (ID_Gremio)
-    REFERENCES gremio(ID_Gremio),
-
-    CONSTRAINT FK_Item_Mazmorra FOREIGN KEY (ID_Item)
-    REFERENCES item(ID_item),
-
-    CONSTRAINT CHK_nivel CHECK (nivel > 0 AND nivel <= 61)
-)
+);
+GO
 
 CREATE TABLE drop_table(
     ID_mazmorra INT PRIMARY KEY NOT NULL,
@@ -140,8 +147,8 @@ CREATE TABLE drop_table(
     REFERENCES mazmorra(ID_mazmorra),
 
     CONSTRAINT CHK_drop_rate CHECK (drop_rate > 0 AND drop_rate <= 100)
-
-)
+);
+GO
 
 create table Seguimiento_Venta(
     id_venta INT IDENTITY(1,1) NOT NULL,
@@ -158,6 +165,7 @@ create table Seguimiento_Venta(
     CONSTRAINT PK_Seguimiento_Venta
         PRIMARY KEY (id_venta),
 );
+GO
 
 create table Detalle_Venta (
     id_venta INT NOT NULL,
@@ -176,6 +184,7 @@ create table Detalle_Venta (
         FOREIGN KEY (id_item)
         REFERENCES Item(id_item)
 );
+GO
 
 CREATE TABLE Seguimiento_Venta_Privado (
     id_venta INT NOT NULL,
@@ -202,6 +211,7 @@ CREATE TABLE Seguimiento_Venta_Privado (
     CONSTRAINT CK_Privado_JugadoresDistintos
         CHECK (id_jugador_emisor <> id_jugador_receptor)
 );
+GO
 
 CREATE TABLE Seguimiento_Venta_NPC (
     id_venta INT NOT NULL,
@@ -231,11 +241,11 @@ CREATE TABLE Seguimiento_Venta_NPC (
         FOREIGN KEY (id_gremio_pagador)
         REFERENCES Gremio(id_gremio)
 );
+GO
 
 --Procedimientos
 --  Tabla ITEM
 
-GO;
 CREATE PROCEDURE Insertar_Item
 @ID_item INT,
 @grado INT,
@@ -248,8 +258,8 @@ BEGIN
     VALUES (@ID_item, @grado, @tipo, @valor, @propiedades)
 END
 
+GO
 
-GO;
 --  Tabla Gremio
 
 CREATE PROCEDURE Insertar_gremio
@@ -265,7 +275,7 @@ BEGIN
     VALUES (@ID_Gremio, @Nombre_Gremio, @Fondo, @ID_Lider)
 END
 
-GO;
+GO
 
 CREATE PROCEDURE Modificar_Gremio
 
@@ -283,7 +293,7 @@ BEGIN
     WHERE ID_Gremio = @ID_Gremio
 END
 
-GO;
+GO
 
 CREATE PROCEDURE Borrar_Gremio
 
@@ -295,7 +305,7 @@ BEGIN
     WHERE ID_Gremio = @ID_Gremio
 END
 
-GO;
+GO
 
 --Tabla Admin
 
@@ -306,11 +316,11 @@ CREATE PROCEDURE Insertar_Admin
 
 AS
 BEGIN
-    INSERT INTO Administrador (ID_entidad, Nombre_Admin)
+    INSERT INTO Administrador (ID_jugador, Nombre_Admin)
     VALUES (@ID_entidad, @Nombre_Admin)
 END
 
-GO;
+GO
 
 CREATE PROCEDURE Modificar_Admin
 
@@ -321,10 +331,10 @@ AS
 BEGIN
     UPDATE Administrador
     SET Nombre_Admin = @Nombre_Admin
-    WHERE ID_entidad = @ID_entidad
+    WHERE ID_jugador = @ID_entidad
 END
 
-GO;
+GO
 
 CREATE PROCEDURE EliminarAdmin
 
@@ -333,10 +343,10 @@ CREATE PROCEDURE EliminarAdmin
 AS
 BEGIN
     DELETE FROM Administrador
-    WHERE ID_entidad = @ID_entidad
+    WHERE ID_jugador = @ID_entidad
 END
 
-GO;
+GO
 
 --Tabla item_en_inventario
 
@@ -344,11 +354,11 @@ CREATE PROCEDURE SP_Insert_Inv
 @ID_entidad int,
 @ID_item int
 AS BEGIN
-INSERT INTO item_en_inventario(ID_entidad, ID_Item) VALUES
+INSERT INTO item_en_inventario(ID_jugador, ID_Item) VALUES
 (@ID_entidad, @ID_item)
 END;
 
-GO;
+GO
 
 CREATE PROCEDURE SP_Update_Inv
 @ID_entidad int,
@@ -356,19 +366,19 @@ CREATE PROCEDURE SP_Update_Inv
 AS BEGIN
 UPDATE item_en_inventario
 SET ID_Item = @ID_Item
-WHERE ID_entidad = @ID_entidad
+WHERE ID_jugador = @ID_entidad
 END;
 
-GO;
+GO
 
 CREATE PROCEDURE SP_Delete_Inv
 @ID_entidad int
 AS BEGIN
 DELETE FROM item_en_inventario
-WHERE ID_entidad = @ID_entidad
+WHERE ID_jugador = @ID_entidad
 END;
 
-GO;
+GO
 
 --Tabla NPC
 
@@ -379,7 +389,7 @@ INSERT INTO Vendedor_NPC(ID_Vendedor) VALUES
 (@ID_vendedor)
 END;
 
-GO;
+GO
 
 CREATE PROCEDURE SP_Update_NPC
 @ID_vendedor int
@@ -388,7 +398,7 @@ UPDATE Vendedor_NPC
 SET ID_Vendedor = @ID_Vendedor
 END;
 
-GO;
+GO
 
 CREATE PROCEDURE SP_Delete_NPC
 @ID_vendedor int
@@ -397,4 +407,4 @@ DELETE FROM Vendedor_NPC
 WHERE ID_Vendedor = @ID_Vendedor
 END;
 
-GO;
+GO
