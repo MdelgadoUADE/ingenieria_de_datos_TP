@@ -1,3 +1,10 @@
+/*
+usar para probar errores de ejecucion:
+(cerrar diagramas)
+use master
+drop database main_runescape;
+*/
+
 CREATE DATABASE main_runescape
 
 USE main_runescape
@@ -136,6 +143,95 @@ CREATE TABLE drop_table(
 
 )
 
+create table Seguimiento_Venta(
+    id_venta INT IDENTITY(1,1) NOT NULL,
+    timestamp_venta DATETIME NOT NULL DEFAULT SYSDATETIME(),
+    tipo_venta VARCHAR(20) NOT NULL,
+    estado VARCHAR(15) NOT NULL DEFAULT 'COMPLETADA',
+
+    CONSTRAINT CK_SeguimientoVenta_Tipo
+        CHECK (tipo_venta IN ('PRIVADA','NPC')),
+
+    CONSTRAINT CK_SeguimientoVenta_Estado
+        CHECK (estado IN ('PENDIENTE','COMPLETADA','CANCELADA')),
+
+    CONSTRAINT PK_Seguimiento_Venta
+        PRIMARY KEY (id_venta),
+);
+
+create table Detalle_Venta (
+    id_venta INT NOT NULL,
+    id_item INT NOT NULL,
+    oro_item INT NULL,
+
+    CONSTRAINT PK_Detalle_Venta
+        PRIMARY KEY (id_venta, id_item),
+
+    CONSTRAINT FK_DetalleVenta_Venta
+        FOREIGN KEY (id_venta)
+        REFERENCES Seguimiento_Venta(id_venta)
+        ON DELETE CASCADE,
+
+    CONSTRAINT FK_DetalleVenta_Item
+        FOREIGN KEY (id_item)
+        REFERENCES Item(id_item)
+);
+
+CREATE TABLE Seguimiento_Venta_Privado (
+    id_venta INT NOT NULL,
+    id_jugador_emisor INT NOT NULL,
+    id_jugador_receptor INT NOT NULL,
+    oro_total INT NULL,
+
+    CONSTRAINT PK_Seguimiento_Venta_Privado
+        PRIMARY KEY (id_venta),
+
+    CONSTRAINT FK_Privado_Venta
+        FOREIGN KEY (id_venta)
+        REFERENCES Seguimiento_Venta(id_venta)
+        ON DELETE CASCADE,
+
+    CONSTRAINT FK_Privado_Emisor
+        FOREIGN KEY (id_jugador_emisor)
+        REFERENCES Jugador(id_jugador),
+
+    CONSTRAINT FK_Privado_Receptor
+        FOREIGN KEY (id_jugador_receptor)
+        REFERENCES Jugador(id_jugador),
+
+    CONSTRAINT CK_Privado_JugadoresDistintos
+        CHECK (id_jugador_emisor <> id_jugador_receptor)
+);
+
+CREATE TABLE Seguimiento_Venta_NPC (
+    id_venta INT NOT NULL,
+    id_jugador INT NOT NULL,
+    id_vendedor_npc INT NOT NULL,
+    es_compra BIT NOT NULL,
+    id_gremio_pagador INT NULL,
+    oro_total INT NOT NULL,
+
+    CONSTRAINT PK_Seguimiento_Venta_NPC
+        PRIMARY KEY (id_venta),
+
+    CONSTRAINT FK_NPC_Venta
+        FOREIGN KEY (id_venta)
+        REFERENCES Seguimiento_Venta(id_venta)
+        ON DELETE CASCADE,
+
+    CONSTRAINT FK_NPC_Jugador
+        FOREIGN KEY (id_jugador)
+        REFERENCES Jugador(id_jugador),
+
+    CONSTRAINT FK_NPC_Vendedor
+        FOREIGN KEY (id_vendedor_npc)
+        REFERENCES Vendedor_NPC(id_vendedor),
+
+    CONSTRAINT FK_NPC_Gremio
+        FOREIGN KEY (id_gremio_pagador)
+        REFERENCES Gremio(id_gremio)
+);
+
 --Procedimientos
 --  Tabla ITEM
 
@@ -168,7 +264,8 @@ BEGIN
     INSERT INTO Gremio (ID_Gremio, Nombre_Gremio, Fondo, ID_Lider)
     VALUES (@ID_Gremio, @Nombre_Gremio, @Fondo, @ID_Lider)
 END
-GO
+
+GO;
 
 CREATE PROCEDURE Modificar_Gremio
 
@@ -185,7 +282,8 @@ BEGIN
         ID_Lider = @ID_Lider
     WHERE ID_Gremio = @ID_Gremio
 END
-GO
+
+GO;
 
 CREATE PROCEDURE Borrar_Gremio
 
@@ -196,8 +294,8 @@ BEGIN
     DELETE FROM Gremio
     WHERE ID_Gremio = @ID_Gremio
 END
-GO
 
+GO;
 
 --Tabla Admin
 
@@ -211,8 +309,8 @@ BEGIN
     INSERT INTO Administrador (ID_entidad, Nombre_Admin)
     VALUES (@ID_entidad, @Nombre_Admin)
 END
-GO
 
+GO;
 
 CREATE PROCEDURE Modificar_Admin
 
@@ -225,7 +323,8 @@ BEGIN
     SET Nombre_Admin = @Nombre_Admin
     WHERE ID_entidad = @ID_entidad
 END
-GO
+
+GO;
 
 CREATE PROCEDURE EliminarAdmin
 
@@ -236,8 +335,8 @@ BEGIN
     DELETE FROM Administrador
     WHERE ID_entidad = @ID_entidad
 END
-GO
 
+GO;
 
 --Tabla item_en_inventario
 
@@ -248,7 +347,8 @@ AS BEGIN
 INSERT INTO item_en_inventario(ID_entidad, ID_Item) VALUES
 (@ID_entidad, @ID_item)
 END;
-GO
+
+GO;
 
 CREATE PROCEDURE SP_Update_Inv
 @ID_entidad int,
@@ -258,7 +358,8 @@ UPDATE item_en_inventario
 SET ID_Item = @ID_Item
 WHERE ID_entidad = @ID_entidad
 END;
-GO
+
+GO;
 
 CREATE PROCEDURE SP_Delete_Inv
 @ID_entidad int
@@ -269,11 +370,10 @@ END;
 
 GO;
 
-
 --Tabla NPC
 
 CREATE PROCEDURE SP_Insert_NPC
-@ID_vendedor int,
+@ID_vendedor int
 AS BEGIN
 INSERT INTO Vendedor_NPC(ID_Vendedor) VALUES
 (@ID_vendedor)
@@ -282,10 +382,10 @@ END;
 GO;
 
 CREATE PROCEDURE SP_Update_NPC
-@ID_vendedor int,
+@ID_vendedor int
 AS BEGIN
 UPDATE Vendedor_NPC
-WHERE ID_Vendedor = @ID_Vendedor
+SET ID_Vendedor = @ID_Vendedor
 END;
 
 GO;
