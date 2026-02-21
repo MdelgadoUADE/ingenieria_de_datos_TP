@@ -408,3 +408,53 @@ WHERE ID_Vendedor = @ID_Vendedor
 END;
 
 GO
+
+CREATE VIEW VW_Items_Vendidos_NPC AS
+SELECT 
+    n.id_vendedor_npc,
+    dv.id_item,
+    COUNT(*) AS cantidad_vendida
+FROM Seguimiento_Venta_NPC n
+JOIN Seguimiento_Venta v ON v.id_venta = n.id_venta
+JOIN Detalle_Venta dv ON dv.id_venta = v.id_venta
+WHERE n.es_compra = 1   -- jugador compra ? npc vende
+GROUP BY n.id_vendedor_npc, dv.id_item;
+GO
+
+CREATE VIEW VW_Valor_Inventario_Jugador AS
+SELECT 
+    j.id_jugador,
+    SUM(i.valor) AS valor_total_inventario
+FROM jugador j
+LEFT JOIN item_en_inventario inv ON j.id_jugador = inv.id_jugador
+LEFT JOIN item i ON i.id_item = inv.id_item
+GROUP BY j.id_jugador;
+GO
+
+CREATE VIEW VW_Jugadores_Mas_Ricos AS
+SELECT 
+    j.id_jugador,
+    e.oro_disponible,
+    ISNULL(v.valor_total_inventario,0) AS valor_inventario,
+    e.oro_disponible + ISNULL(v.valor_total_inventario,0) AS riqueza_total
+FROM jugador j
+JOIN entidad e ON j.id_jugador = e.id_entidad
+LEFT JOIN VW_Valor_Inventario_Jugador v ON v.id_jugador = j.id_jugador;
+GO
+
+
+CREATE VIEW VW_Riqueza_Gremio AS
+SELECT 
+    g.id_gremio,
+    g.nombre_gremio,
+    g.fondo +
+    ISNULL(SUM(e.oro_disponible + ISNULL(v.valor_total_inventario,0)),0)
+    AS riqueza_total_gremio
+FROM gremio g
+LEFT JOIN jugador j ON j.id_gremio = g.id_gremio
+LEFT JOIN entidad e ON j.id_jugador = e.id_entidad
+LEFT JOIN VW_Valor_Inventario_Jugador v ON v.id_jugador = j.id_jugador
+GROUP BY g.id_gremio, g.nombre_gremio, g.fondo;
+GO
+
+
