@@ -527,6 +527,14 @@ GO
 
 -- CONSULTAS
 
+-- Promedio de oro por jugador
+
+SELECT 
+AVG(e.oro_disponible) AS 'Promedio Oro de Jugadores'
+
+FROM jugador j
+JOIN entidad e ON j.ID_jugador = e.ID_entidad
+
 -- Top 5 jugadores más ricos
 
 SELECT TOP 5
