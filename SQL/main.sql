@@ -409,6 +409,8 @@ END;
 
 GO
 
+-- VISTAS
+
 CREATE VIEW VW_Items_Vendidos_NPC AS
 SELECT 
     n.id_vendedor_npc,
@@ -457,4 +459,92 @@ LEFT JOIN VW_Valor_Inventario_Jugador v ON v.id_jugador = j.id_jugador
 GROUP BY g.id_gremio, g.nombre_gremio, g.fondo;
 GO
 
+-- Vista de jugadores con su oro actual Jugador, nombre, oro disponible, gremio
+CREATE VIEW Info_Jugador AS
 
+SELECT 
+j.ID_jugador,
+e.nombre_entidad AS Jugador, 
+g.Nombre_Gremio AS Gremio, 
+e.oro_disponible AS Oro 
+
+FROM jugador j 
+JOIN entidad e ON j.ID_jugador = e.ID_entidad
+LEFT JOIN gremio g ON g.ID_Gremio = j.ID_gremio
+
+GO
+
+-- Vista de jugadores con su gremio  Jugador + nombre del gremio + líder
+
+CREATE VIEW Info_Jugador_Gremio AS
+
+SELECT 
+j.ID_jugador AS Jugador,
+g.Nombre_Gremio AS Gremio,
+e.nombre_entidad AS Lider
+
+FROM jugador j
+JOIN gremio g ON j.ID_gremio = g.ID_Gremio
+JOIN entidad e ON g.ID_Lider = e.ID_entidad;
+
+GO
+
+--Vista de jugadores que son líderes de gremio 
+
+CREATE VIEW Jugadores_Lideres AS
+
+SELECT
+j.ID_jugador,
+e.nombre_entidad AS 'Jugador Lider', 
+g.Nombre_Gremio AS Gremio
+
+FROM jugador j 
+JOIN entidad e ON j.ID_jugador = e.ID_entidad
+JOIN gremio g ON g.ID_Gremio = j.ID_gremio
+
+WHERE j.ID_jugador = g.ID_Lider
+
+GO
+
+-- Vista de jugadores con sus items   Jugador + item + grado + valor
+
+CREATE VIEW Jugadores_Items AS
+
+SELECT
+j.ID_jugador,
+e.nombre_entidad,
+it.grado,
+it.tipo,
+it.valor
+
+FROM item it
+JOIN item_en_inventario itinv on it.ID_Item = itinv.ID_Item
+JOIN jugador j ON j.ID_jugador = itinv.ID_jugador
+JOIN entidad e ON j.ID_jugador = e.ID_entidad
+
+GO
+
+
+-- CONSULTAS
+
+-- Top 5 jugadores más ricos
+
+SELECT TOP 5
+j.ID_jugador,
+e.nombre_entidad,
+e.oro_disponible
+
+FROM jugador j
+JOIN entidad e ON j.ID_jugador = e.ID_entidad
+
+ORDER BY oro_disponible DESC
+
+-- Top 5 gremios más ricos
+
+SELECT TOP 5
+Nombre_Gremio,
+Fondo
+
+FROM gremio
+
+ORDER BY Fondo DESC
