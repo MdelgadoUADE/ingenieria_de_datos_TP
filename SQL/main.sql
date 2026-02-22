@@ -14,99 +14,87 @@ GO
 --Tablas
 
 CREATE TABLE item(
-    ID_item INT PRIMARY KEY NOT NULL,
+    ID_item VARCHAR(12) PRIMARY KEY NOT NULL,
     grado INT NOT NULL DEFAULT 1,
     tipo VARCHAR(20) NOT NULL,
     valor INT DEFAULT 0,
-    propiedades VARCHAR(50),
 
     CONSTRAINT CHK_grado CHECK (grado > 0 AND grado <= 70)
 );
-GO
+
+
+CREATE TABLE propiedades(
+    ID_item VARCHAR(12) NOT NULL PRIMARY KEY,
+    propiedad VARCHAR(20) NOT NULL,
+
+    CONSTRAINT FK_ID_item FOREIGN KEY (ID_item)
+    REFERENCES item(ID_item)
+);
+
+CREATE TABLE historial_precio(
+    ID_Item VARCHAR(12) NOT NULL,
+    valor INT NOT NULL,
+    timestamp DATETIME NOT NULL DEFAULT SYSDATETIME(),
+
+    CONTSTRAINT PK_historial_precio
+    PRIMARY KEY (ID_item, timestamp),
+    
+    CONSTRAINT FK_ID_item FOREIGN KEY (ID_item)
+    REFERENCES item(ID_item),
+);
 
 CREATE TABLE gremio(
-	ID_Gremio INT PRIMARY KEY,
-	Nombre_Gremio VARCHAR(50),
-	Fondo INT,
-	ID_Lider INT,
+	ID_Gremio INT PRIMARY KEY NOT NULL,
+	nombre_gremio VARCHAR(50) NOT NULL,
+	Fondo INT NOT NULL DEFAULT 0,
+	nombre_entidad INT NOT NULL,
 
-    CONSTRAINT CHK_ID_Gremio CHECK (ID_Gremio BETWEEN 100 AND 999),
+    CONSTRAINT CHK_ID_Gremio CHECK (ID_Gremio BETWEEN 1000 AND 9999),
     CONSTRAINT CHK_fondo CHECK (Fondo > 0),
 );
-GO
 
 CREATE TABLE entidad(
-    ID_entidad INT PRIMARY KEY NOT NULL,
-    tipo VARCHAR(3),
-    nombre_entidad VARCHAR(20),
+    nombre_entidad VARCHAR(20) PRIMARY KEY NOT NULL,
     oro_disponible INT,
-
-    CONSTRAINT CHK_tipo CHECK (tipo IN ('jug', 'npc')),
 
     CONSTRAINT CHK_oro_disponible CHECK (oro_disponible > 0)
 );
-GO
 
-CREATE TABLE jugador(
-    ID_jugador INT PRIMARY KEY NOT NULL,
-    ID_gremio INT,
+CREATE TABLE tipo_entidad(
+    identificador_tipo VARCHAR(3) PRIMARY KEY NOT NULL,
+)
 
-    CONSTRAINT FK_ID_jugador FOREIGN KEY (ID_jugador)
-    REFERENCES entidad(ID_entidad),
+CREATE TABLE entidad_tipo(
+    nombre_entidad VARCHAR(20) NOT NULL,
+    identificador_tipo VARCHAR(3) NOT NULL,
 
-    CONSTRAINT FK_ID_gremio FOREIGN KEY (ID_gremio) 
-    REFERENCES GREMIO(ID_gremio),
+    CONSTRAINT FK_entidad FOREIGN KEY (nombre_entidad)
+    REFERENCES entidad(nombre_entidad),
 
-    CONSTRAINT CHK_ID_jugador CHECK (ID_jugador BETWEEN 10000000 AND 99999999)
-);
-GO
+    CONSTRAINT FK_tipo_entidad FOREIGN KEY (identificador_tipo)
+    REFERENCES tipo_entidad(identificador_tipo),
+)
 
-ALTER TABLE Gremio
-ADD 
-CONSTRAINT FK_Jugador_Gremio FOREIGN KEY (ID_Lider)
-REFERENCES jugador(ID_jugador)
-GO
+CREATE TABLE item_entidad(
+    ID_item VARCHAR(12) NOT NULL,
+    nombre_entidad VARCHAR(20) NOT NULL,
 
-CREATE TABLE vendedor_npc(
-    ID_vendedor INT PRIMARY KEY NOT NULL,
+    CONSTRAINT PK_item_entidad
+    PRIMARY KEY (ID_item, nombre_entidad),
 
-    CONSTRAINT FK_vendedor_npc FOREIGN KEY (ID_vendedor)
-    REFERENCES entidad(ID_entidad),
+    CONSTRAINT FK_item FOREIGN KEY (ID_item)
+    REFERENCES item(ID_item),
 
-    CONSTRAINT CH_NPC_5dig
-    CHECK (ID_Vendedor BETWEEN 10000 AND 99999)
-);
-GO
-
-CREATE TABLE item_en_inventario(
-    ID_jugador INT NOT NULL,
-    ID_Item INT NOT NULL,
-
-    CONSTRAINT FK_IDjug_Inv
-    FOREIGN KEY (ID_jugador) REFERENCES jugador(ID_jugador),
-    CONSTRAINT FK_IDitem_Inv
-    FOREIGN KEY (ID_Item) REFERENCES Item(ID_Item),
-	CONSTRAINT PK_Inv
-	PRIMARY KEY (ID_jugador, ID_item)
-);
-GO
-
-CREATE TABLE Administrador(   
-    ID_jugador INT,
-    Nombre_Admin VARCHAR(50)
-
-    CONSTRAINT FK_Jugador_Admin FOREIGN KEY (ID_jugador)
-    REFERENCES jugador(ID_jugador)
-
-    CONSTRAINT PK_admin PRIMARY KEY (ID_jugador,Nombre_Admin)
-);
-GO
+    CONSTRAINT FK_entidad_item FOREIGN KEY (nombre_entidad)
+    REFERENCES entidad(nombre_entidad),
+)
 
 CREATE TABLE mazmorra(
-    ID_mazmorra INT PRIMARY KEY,
-    nivel INT,
+    ID_mazmorra VARCHAR(5) PRIMARY KEY,
+    nivel INT NOT NULL,
     ID_Gremio INT,
-    ID_Item INT,
+    ID_Item INT NOT NULL,
+    drop_rate INT DEFAULT 1 NOT NULL,
 
     CONSTRAINT FK_Gremio_Mazmorra FOREIGN KEY (ID_Gremio)
     REFERENCES gremio(ID_Gremio),
@@ -114,178 +102,197 @@ CREATE TABLE mazmorra(
     CONSTRAINT FK_Item_Mazmorra FOREIGN KEY (ID_Item)
     REFERENCES item(ID_item),
 
-    CONSTRAINT CHK_nivel CHECK (nivel > 0 AND nivel <= 61)
+    CONSTRAINT CHK_nivel CHECK (nivel > 0 AND nivel <= 60)
 );
-GO
 
-CREATE TABLE propietario(
-    ID_Item_propiedad INT NOT NULL,
-    ID_Jugador INT,
-    ID_vendedor INT,
-    ID_mazmorra INT,
-
-    CONSTRAINT FK_Item_Prop FOREIGN KEY (ID_Item_propiedad)
-    REFERENCES item(ID_item),
-
-    CONSTRAINT FK_Jugador_Prop FOREIGN KEY (ID_Jugador)
-    REFERENCES jugador(ID_jugador),
-
-    CONSTRAINT FK_Vendedor_Prop FOREIGN KEY (ID_vendedor)
-    REFERENCES vendedor_npc(ID_vendedor),
-
-    CONSTRAINT FK_Mazmorra_Prop FOREIGN KEY (ID_mazmorra)
-    REFERENCES mazmorra(ID_mazmorra),
-
-    CONSTRAINT PK_Propietario PRIMARY KEY (ID_Item_propiedad,ID_Jugador,ID_vendedor)
-);
-GO
-
-CREATE TABLE drop_table(
-    ID_mazmorra INT PRIMARY KEY NOT NULL,
+CREATE TABLE mazmorra_categoria(
+    ID_mazmorra VARCHAR(5) NOT NULL PRIMARY KEY,
     categoria VARCHAR(20) NOT NULL,
-    drop_rate INT DEFAULT 1,
 
-    CONSTRAINT FK_Mazmorra_DT FOREIGN KEY (ID_mazmorra)
-    REFERENCES mazmorra(ID_mazmorra),
+    CONSTRAINT FK_Mazmorra_Cat FOREIGN KEY (ID_mazmorra)
+    REFERENCES mazmorra(ID_mazmorra)
+)
 
-    CONSTRAINT CHK_drop_rate CHECK (drop_rate > 0 AND drop_rate <= 100)
-);
-GO
+CREATE TABLE ventas(
+    id_transaccion INT PRIMARY KEY NOT NULL IDENTITY(1,1),
+    nombre_entidad_vendedor VARCHAR(20) NOT NULL,
+    nombre_entidad_comprador VARCHAR(20) NOT NULL,
+    oro_intercambiado INT NOT NULL,
+    timestamp DATETIME NOT NULL DEFAULT SYSDATETIME(),
+    chk_gremio INT NOT NULL,
 
-create table Seguimiento_Venta(
-    id_venta INT IDENTITY(1,1) NOT NULL,
-    timestamp_venta DATETIME NOT NULL DEFAULT SYSDATETIME(),
-    tipo_venta VARCHAR(20) NOT NULL,
-    estado VARCHAR(15) NOT NULL DEFAULT 'COMPLETADA',
+    CONSTRAINT FK_entidad_vendedor FOREIGN KEY (nombre_entidad_vendedor)
+    REFERENCES entidad(nombre_entidad),
 
-    CONSTRAINT CK_SeguimientoVenta_Tipo
-        CHECK (tipo_venta IN ('PRIVADA','NPC')),
+    CONSTRAINT FK_entidad_comprador FOREIGN KEY (nombre_entidad_comprador)
+    REFERENCES entidad(nombre_entidad),
 
-    CONSTRAINT CK_SeguimientoVenta_Estado
-        CHECK (estado IN ('PENDIENTE','COMPLETADA','CANCELADA')),
+    CONSTRAINT CHK_oro_intercambiado CHECK (oro_intercambiado > 0),
 
-    CONSTRAINT PK_Seguimiento_Venta
-        PRIMARY KEY (id_venta),
-);
-GO
+    CONSTRAINT CHK_chk_gremio CHECK (chk_gremio = 0 OR chk_gremio = 1)
+)
 
 create table Detalle_Venta (
-    id_venta INT NOT NULL,
-    id_item INT NOT NULL,
-    oro_item INT NULL,
+    id_transaccion INT NOT NULL,
+    id_item VARCHAR(12) NOT NULL,
 
-    CONSTRAINT PK_Detalle_Venta
-        PRIMARY KEY (id_venta, id_item),
+    CONSTRAINT PK_Detalle_Venta PRIMARY KEY (id_transaccion, id_item),
 
-    CONSTRAINT FK_DetalleVenta_Venta
-        FOREIGN KEY (id_venta)
-        REFERENCES Seguimiento_Venta(id_venta)
-        ON DELETE CASCADE,
+    CONSTRAINT FK_DetalleVenta_Venta FOREIGN KEY (id_transaccion)
+    REFERENCES ventas(id_transaccion),
 
-    CONSTRAINT FK_DetalleVenta_Item
-        FOREIGN KEY (id_item)
-        REFERENCES Item(id_item)
+    CONSTRAINT FK_DetalleVenta_Item FOREIGN KEY (id_item)
+    REFERENCES Item(id_item)
 );
-GO
 
-CREATE TABLE Seguimiento_Venta_Privado (
-    id_venta INT NOT NULL,
-    id_jugador_emisor INT NOT NULL,
-    id_jugador_receptor INT NOT NULL,
-    oro_total INT NULL,
+CREATE TABLE jugador(
+    nombre_entidad VARCHAR(20) PRIMARY KEY NOT NULL,
+    ID_gremio INT NOT NULL,
 
-    CONSTRAINT PK_Seguimiento_Venta_Privado
-        PRIMARY KEY (id_venta),
+    CONSTRAINT FK_entidad_jugador FOREIGN KEY (nombre_entidad)
+    REFERENCES entidad(nombre_entidad),
 
-    CONSTRAINT FK_Privado_Venta
-        FOREIGN KEY (id_venta)
-        REFERENCES Seguimiento_Venta(id_venta)
-        ON DELETE CASCADE,
-
-    CONSTRAINT FK_Privado_Emisor
-        FOREIGN KEY (id_jugador_emisor)
-        REFERENCES Jugador(id_jugador),
-
-    CONSTRAINT FK_Privado_Receptor
-        FOREIGN KEY (id_jugador_receptor)
-        REFERENCES Jugador(id_jugador),
-
-    CONSTRAINT CK_Privado_JugadoresDistintos
-        CHECK (id_jugador_emisor <> id_jugador_receptor)
+    CONSTRAINT FK_gremio_jugador FOREIGN KEY (ID_gremio)
+    REFERENCES gremio(ID_gremio)
 );
-GO
 
-CREATE TABLE Seguimiento_Venta_NPC (
-    id_venta INT NOT NULL,
-    id_jugador INT NOT NULL,
-    id_vendedor_npc INT NOT NULL,
-    es_compra BIT NOT NULL,
-    id_gremio_pagador INT NULL,
-    oro_total INT NOT NULL,
+CREATE TABLE Item_mazmorra(
+    ID_item VARCHAR(12) NOT NULL,
+    ID_mazmorra VARCHAR(5) NOT NULL,
 
-    CONSTRAINT PK_Seguimiento_Venta_NPC
-        PRIMARY KEY (id_venta),
+    CONSTRAINT PK_Item_mazmorra PRIMARY KEY (ID_item, ID_mazmorra),
 
-    CONSTRAINT FK_NPC_Venta
-        FOREIGN KEY (id_venta)
-        REFERENCES Seguimiento_Venta(id_venta)
-        ON DELETE CASCADE,
+    CONSTRAINT FK_Item FOREIGN KEY (ID_item)
+    REFERENCES item(ID_item),
 
-    CONSTRAINT FK_NPC_Jugador
-        FOREIGN KEY (id_jugador)
-        REFERENCES Jugador(id_jugador),
-
-    CONSTRAINT FK_NPC_Vendedor
-        FOREIGN KEY (id_vendedor_npc)
-        REFERENCES Vendedor_NPC(id_vendedor),
-
-    CONSTRAINT FK_NPC_Gremio
-        FOREIGN KEY (id_gremio_pagador)
-        REFERENCES Gremio(id_gremio)
+    CONSTRAINT FK_Mazmorra FOREIGN KEY (ID_mazmorra)
+    REFERENCES mazmorra(ID_mazmorra) 
 );
-GO
 
+GO;
 --Procedimientos
 --  Tabla ITEM
 
 CREATE PROCEDURE Insertar_Item
-@ID_item INT,
+@ID_item VARCHAR(12),
 @grado INT,
 @tipo VARCHAR(20),
-@valor INT,
-@propiedades VARCHAR(50)
+@valor INT
 AS
 BEGIN
-    INSERT INTO item (ID_item, grado, tipo, valor, propiedades)
-    VALUES (@ID_item, @grado, @tipo, @valor, @propiedades)
+    INSERT INTO item (ID_item, grado, tipo, valor)
+    VALUES (@ID_item, @grado, @tipo, @valor)
 END
 
-GO
+GO;
 
+CREATE PROCEDURE Modificar_Item
+@ID_item VARCHAR(12),
+@grado INT,
+@tipo VARCHAR(20),
+@valor INT
+AS
+BEGIN
+    UPDATE item
+    SET grado = @grado,
+        tipo = @tipo,
+        valor = @valor
+    WHERE ID_item = @ID_item
+END
+
+GO;
+
+CREATE PROCEDURE Borrar_Item
+@ID_item VARCHAR(12)
+AS
+BEGIN
+    DELETE FROM item
+    WHERE ID_item = @ID_item
+END
+
+GO;
+
+--  Tabla propiedades
+
+CREATE PROCEDURE Insertar_Propiedades
+@ID_item VARCHAR(12),
+@propiedad VARCHAR(20)
+AS
+BEGIN
+    INSERT INTO propiedades (ID_item, propiedad)
+    VALUES (@ID_item, @propiedad)
+END
+
+GO;
+
+CREATE PROCEDURE Modificar_Propiedades
+@ID_item VARCHAR(12),
+@propiedad VARCHAR(20)
+AS
+BEGIN
+    UPDATE propiedades
+    SET propiedad = @propiedad
+    WHERE ID_item = @ID_item AND propiedad = @propiedad
+END
+
+GO;
+
+CREATE PROCEDURE Borrar_Propiedades
+@ID_item VARCHAR(12),
+@propiedad VARCHAR(20)
+AS
+BEGIN
+    DELETE FROM propiedades
+    WHERE ID_item = @ID_item AND propiedad = @propiedad
+END
+
+GO;
+
+--  Tabla historial_precio
+
+CREATE PROCEDURE Insertar_historial_precio
+@ID_item VARCHAR(12),
+@precio INT
+AS
+BEGIN
+    INSERT INTO historial_precio (ID_item, precio)
+    VALUES (@ID_item, @precio)
+END
+
+GO;
+
+CREATE PROCEDURE Modificar_historial_precio
+@ID_item VARCHAR(12),
+@precio INT,
+@timestamp DATETIME
+AS
+BEGIN
+    UPDATE historial_precio
+    SET precio = @precio
+    WHERE ID_item = @ID_item AND timestamp = @timestamp
+END
+
+GO;
 --  Tabla Gremio
 
 CREATE PROCEDURE Insertar_gremio
-
 @ID_Gremio INT,
 @Nombre_Gremio VARCHAR(50),
-@Fondo DECIMAL(10,2),
-@ID_Lider INT
-
+@Fondo INT,
+@nombre_entidad INT
 AS
 BEGIN
     INSERT INTO Gremio (ID_Gremio, Nombre_Gremio, Fondo, ID_Lider)
     VALUES (@ID_Gremio, @Nombre_Gremio, @Fondo, @ID_Lider)
 END
 
-GO
+GO;
 
 CREATE PROCEDURE Modificar_Gremio
-
 @ID_Gremio INT,
 @Nombre_Gremio VARCHAR(50),
-@Fondo DECIMAL(10,2),
-@ID_Lider INT
-
+@Fondo INT,
+@nombre_entidad INT
 AS
 BEGIN
     UPDATE Gremio
@@ -295,122 +302,367 @@ BEGIN
     WHERE ID_Gremio = @ID_Gremio
 END
 
-GO
+GO;
 
 CREATE PROCEDURE Borrar_Gremio
-
 @ID_Gremio INT
-
 AS
 BEGIN
     DELETE FROM Gremio
     WHERE ID_Gremio = @ID_Gremio
 END
 
-GO
+GO;
 
---Tabla Admin
+--  Tabla entidad
 
-CREATE PROCEDURE Insertar_Admin
-
-@ID_entidad INT,
-@Nombre_Admin VARCHAR(50)
-
+CREATE PROCEDURE Insertar_entidad
+@nombre_entidad VARCHAR(20),
+@oro_disponible INT
 AS
 BEGIN
-    INSERT INTO Administrador (ID_jugador, Nombre_Admin)
-    VALUES (@ID_entidad, @Nombre_Admin)
+    INSERT INTO entidad (nombre_entidad, oro_disponible)
+    VALUES (@nombre_entidad, @oro_disponible)
 END
 
-GO
+GO;
 
-CREATE PROCEDURE Modificar_Admin
-
-@ID_entidad INT,
-@Nombre_Admin VARCHAR(50)
-
+CREATE PROCEDURE Modificar_entidad
+@nombre_entidad VARCHAR(20),
+@oro_disponible INT
 AS
 BEGIN
-    UPDATE Administrador
-    SET Nombre_Admin = @Nombre_Admin
-    WHERE ID_jugador = @ID_entidad
+    UPDATE entidad
+    SET oro_disponible = @oro_disponible
+    WHERE nombre_entidad = @nombre_entidad
 END
 
-GO
+GO;
 
-CREATE PROCEDURE EliminarAdmin
-
-@ID_entidad INT
-
+CREATE PROCEDURE Borrar_entidad
+@nombre_entidad VARCHAR(20)
 AS
 BEGIN
-    DELETE FROM Administrador
-    WHERE ID_jugador = @ID_entidad
+    DELETE FROM entidad
+    WHERE nombre_entidad = @nombre_entidad
 END
 
-GO
+GO;
 
---Tabla item_en_inventario
+--  Tabla tipo_entidad
 
-CREATE PROCEDURE SP_Insert_Inv
-@ID_entidad int,
-@ID_item int
-AS BEGIN
-INSERT INTO item_en_inventario(ID_jugador, ID_Item) VALUES
-(@ID_entidad, @ID_item)
-END;
+CREATE PROCEDURE Insertar_tipo_entidad
+@identificador_tipo VARCHAR(3)
+AS
+BEGIN
+    INSERT INTO tipo_entidad (identificador_tipo)
+    VALUES (@identificador_tipo)
+END
 
-GO
+GO;
 
-CREATE PROCEDURE SP_Update_Inv
-@ID_entidad int,
-@ID_item int 
-AS BEGIN
-UPDATE item_en_inventario
-SET ID_Item = @ID_Item
-WHERE ID_jugador = @ID_entidad
-END;
+--  Tabla entidad_tipo
 
-GO
+CREATE PROCEDURE Insertar_entidad_tipo
+@identificador_tipo VARCHAR(3),
+@nombre_entidad VARCHAR(20)
+AS
+BEGIN
+    INSERT INTO entidad_tipo (identificador_tipo, nombre_entidad)
+    VALUES (@identificador_tipo, @nombre_entidad)
+END
 
-CREATE PROCEDURE SP_Delete_Inv
-@ID_entidad int
-AS BEGIN
-DELETE FROM item_en_inventario
-WHERE ID_jugador = @ID_entidad
-END;
+GO;
 
-GO
+CREATE PROCEDURE Modificar_entidad_tipo
+@identificador_tipo VARCHAR(3),
+@nombre_entidad VARCHAR(20)
+AS
+BEGIN
+    UPDATE entidad_tipo
+    SET identificador_tipo = @identificador_tipo
+    WHERE nombre_entidad = @nombre_entidad
+END
 
---Tabla NPC
+GO;
 
-CREATE PROCEDURE SP_Insert_NPC
-@ID_vendedor int
-AS BEGIN
-INSERT INTO Vendedor_NPC(ID_Vendedor) VALUES
-(@ID_vendedor)
-END;
+CREATE PROCEDURE Borrar_entidad_tipo
+@nombre_entidad VARCHAR(20)
+AS
+BEGIN
+    DELETE FROM entidad_tipo
+    WHERE nombre_entidad = @nombre_entidad
+END
 
-GO
+GO;
 
-CREATE PROCEDURE SP_Update_NPC
-@ID_vendedor int
-AS BEGIN
-UPDATE Vendedor_NPC
-SET ID_Vendedor = @ID_Vendedor
-END;
+--Tabla ventas
 
-GO
+CREATE PROCEDURE Insertar_Venta
+@nombre_entidad_vendedor VARCHAR(20),
+@nombre_entidad_comprador VARCHAR(20),
+@oro_intercambiado INT,
+@chk_gremio INT
+AS
+BEGIN
+    INSERT INTO ventas (nombre_entidad_vendedor, nombre_entidad_comprador, oro_intercambiado, chk_gremio)
+    VALUES (@nombre_entidad_vendedor, @nombre_entidad_comprador, @oro_intercambiado, @chk_gremio)
+END
 
-CREATE PROCEDURE SP_Delete_NPC
-@ID_vendedor int
-AS BEGIN
-DELETE FROM Vendedor_NPC
-WHERE ID_Vendedor = @ID_Vendedor
-END;
+GO;
 
-GO
+CREATE PROCEDURE Modificar_Venta
+@id_transaccion INT,
+@nombre_entidad_vendedor VARCHAR(20),
+@nombre_entidad_comprador VARCHAR(20),
+@oro_intercambiado INT,
+@chk_gremio INT
+AS
+BEGIN
+    UPDATE ventas
+    SET nombre_entidad_vendedor = @nombre_entidad_vendedor,
+        nombre_entidad_comprador = @nombre_entidad_comprador,
+        oro_intercambiado = @oro_intercambiado,
+        chk_gremio = @chk_gremio
+    WHERE id_transaccion = @id_transaccion
+END
 
+GO;
+
+CREATE PROCEDURE Borrar_Venta
+@id_transaccion INT
+AS
+BEGIN
+    DELETE FROM ventas
+    WHERE id_transaccion = @id_transaccion
+END
+
+GO;
+
+-- Tabla Detalle_Venta
+
+CREATE PROCEDURE Insertar_Detalle_Venta
+@id_transaccion INT,
+@id_item VARCHAR(12)
+AS
+BEGIN
+    INSERT INTO Detalle_Venta (id_transaccion, id_item)
+    VALUES (@id_transaccion, @id_item)
+END
+
+GO;
+
+CREATE PROCEDURE Modificar_Detalle_Venta
+@id_transaccion INT,
+@id_item VARCHAR(12)
+AS
+BEGIN
+    UPDATE Detalle_Venta
+    SET id_transaccion = @id_transaccion,
+        id_item = @id_item
+    WHERE id_transaccion = @id_transaccion AND id_item = @id_item
+END
+
+GO;
+
+CREATE PROCEDURE Borrar_Detalle_Venta
+@id_transaccion INT,
+@id_item VARCHAR(12)
+AS
+BEGIN
+    DELETE FROM Detalle_Venta
+    WHERE id_transaccion = @id_transaccion AND id_item = @id_item
+END
+
+GO;
+
+--  Tabla jugador
+
+CREATE PROCEDURE Insertar_jugador
+@nombre_entidad VARCHAR(12),
+@ID_gremio INT
+AS
+BEGIN
+    INSERT INTO jugador (id_jugador, ID_gremio)
+    VALUES (@id_jugador, @ID_gremio)
+END
+
+GO;
+
+CREATE PROCEDURE Modificar_jugador
+@id_jugador INT,
+@ID_gremio INT
+AS
+BEGIN
+    UPDATE jugador
+    SET ID_gremio = @ID_gremio
+    WHERE id_jugador = @id_jugador
+END
+
+GO;
+
+CREATE PROCEDURE Borrar_jugador
+@id_jugador INT
+AS
+BEGIN
+    DELETE FROM jugador
+    WHERE id_jugador = @id_jugador
+END
+
+GO;
+
+--  Tabla Mazmorra
+
+CREATE PROCEDURE Insertar_Mazmorra
+@ID_mazmorra VARCHAR(5),
+@nivel INT,
+@ID_Gremio INT,
+@ID_Item INT,
+@drop_rate INT
+AS
+BEGIN
+    INSERT INTO mazmorra (ID_mazmorra, nivel, ID_Gremio, ID_Item, drop_rate)
+    VALUES (@ID_mazmorra, @nivel, @ID_Gremio, @ID_Item, @drop_rate)
+END
+
+GO;
+
+CREATE PROCEDURE Modificar_Mazmorra
+@ID_mazmorra VARCHAR(5),
+@nivel INT,
+@ID_Gremio INT,
+@ID_Item INT,
+@drop_rate INT
+AS
+BEGIN
+    UPDATE mazmorra
+    SET nivel = @nivel,
+        ID_Gremio = @ID_Gremio,
+        ID_Item = @ID_Item,
+        drop_rate = @drop_rate
+    WHERE ID_mazmorra = @ID_mazmorra
+END
+
+GO;
+
+CREATE PROCEDURE Borrar_Mazmorra
+@ID_mazmorra VARCHAR(5)
+AS
+BEGIN
+    DELETE FROM mazmorra
+    WHERE ID_mazmorra = @ID_mazmorra
+END
+
+GO;
+
+--  Tabla Mazmorra_Categoria
+
+CREATE PROCEDURE Insertar_Mazmorra_Categoria
+@ID_mazmorra VARCHAR(5),
+@categoria VARCHAR(20)
+AS
+BEGIN
+    INSERT INTO mazmorra_categoria (ID_mazmorra, categoria)
+    VALUES (@ID_mazmorra, @categoria)
+END
+
+GO;
+
+CREATE PROCEDURE Modificar_Mazmorra_Categoria
+@ID_mazmorra VARCHAR(5),
+@categoria VARCHAR(20)
+AS
+BEGIN
+    UPDATE mazmorra_categoria
+    SET categoria = @categoria
+    WHERE ID_mazmorra = @ID_mazmorra
+END
+
+GO;
+
+CREATE PROCEDURE Borrar_Mazmorra_Categoria
+@ID_mazmorra VARCHAR(5)
+AS
+BEGIN
+    DELETE FROM mazmorra_categoria
+    WHERE ID_mazmorra = @ID_mazmorra
+END
+
+GO;
+
+--  Tabla Item_Entidad
+
+CREATE PROCEDURE Insertar_item_entidad
+@id_item VARCHAR(12),
+@nombre_entidad VARCHAR(20)
+AS
+BEGIN
+    INSERT INTO item_entidad (id_item, nombre_entidad)
+    VALUES (@id_item, @nombre_entidad)
+END
+
+GO;
+
+CREATE PROCEDURE Modificar_item_entidad
+@id_item VARCHAR(12),
+@nombre_entidad VARCHAR(20)
+AS
+BEGIN
+    UPDATE item_entidad
+    SET id_item = @id_item,
+        nombre_entidad = @nombre_entidad
+    WHERE id_item = @id_item AND nombre_entidad = @nombre_entidad
+END
+
+GO;
+
+CREATE PROCEDURE Borrar_item_entidad
+@id_item VARCHAR(12),
+@nombre_entidad VARCHAR(20)
+AS
+BEGIN
+    DELETE FROM item_entidad
+    WHERE id_item = @id_item AND nombre_entidad = @nombre_entidad
+END
+
+GO;
+
+--  Tabla Item_Mazmorra
+
+CREATE PROCEDURE Insertar_item_mazmorra
+@ID_item VARCHAR(12),
+@ID_mazmorra VARCHAR(5)
+AS
+BEGIN
+    INSERT INTO item_mazmorra (ID_item, ID_mazmorra)
+    VALUES (@ID_item, @ID_mazmorra)
+END
+
+GO;
+
+CREATE PROCEDURE Modificar_item_mazmorra
+@ID_item VARCHAR(12),
+@ID_mazmorra VARCHAR(5)
+AS
+BEGIN
+    UPDATE item_mazmorra
+    SET ID_item = @ID_item,
+        ID_mazmorra = @ID_mazmorra
+    WHERE ID_item = @ID_item AND ID_mazmorra = @ID_mazmorra
+END
+
+GO;
+
+CREATE PROCEDURE Borrar_item_mazmorra
+@ID_item VARCHAR(12),
+@ID_mazmorra VARCHAR(5)
+AS
+BEGIN
+    DELETE FROM item_mazmorra
+    WHERE ID_item = @ID_item AND ID_mazmorra = @ID_mazmorra
+END
+
+GO;
 
 -- VISTAS
 
@@ -442,7 +694,7 @@ GROUP BY j.id_jugador;
 GO
 
 
--- Ranking de jugadores más ricos
+-- Ranking de jugadores mas ricos
 
 CREATE VIEW VW_Jugadores_Mas_Ricos AS
 SELECT 
@@ -504,7 +756,7 @@ JOIN entidad e ON e.ID_entidad = j.ID_jugador
 GO
 
 
--- Jugadores que son líderes de gremio 
+-- Jugadores que son lideres de gremio 
 
 CREATE VIEW Jugadores_Lideres AS
 
@@ -604,7 +856,7 @@ FROM jugador j
 JOIN entidad e ON j.ID_jugador = e.ID_entidad
 
 
--- Top 5 jugadores más ricos
+-- Top 5 jugadores mas ricos
 
 SELECT TOP 5
 j.ID_jugador,
@@ -617,7 +869,7 @@ JOIN entidad e ON j.ID_jugador = e.ID_entidad
 ORDER BY oro_disponible DESC
 
 
--- Top 5 gremios más ricos
+-- Top 5 gremios mas ricos
 
 SELECT TOP 5
 Nombre_Gremio,
