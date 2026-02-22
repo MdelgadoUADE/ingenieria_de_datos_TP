@@ -411,6 +411,8 @@ GO
 
 -- VISTAS
 
+-- Items vendidos por NPC          
+
 CREATE VIEW VW_Items_Vendidos_NPC AS
 SELECT 
     n.id_vendedor_npc,
@@ -423,6 +425,9 @@ WHERE n.es_compra = 1   -- jugador compra ? npc vende
 GROUP BY n.id_vendedor_npc, dv.id_item;
 GO
 
+
+-- Valor total del inventario por jugador
+
 CREATE VIEW VW_Valor_Inventario_Jugador AS
 SELECT 
     j.id_jugador,
@@ -432,6 +437,9 @@ LEFT JOIN item_en_inventario inv ON j.id_jugador = inv.id_jugador
 LEFT JOIN item i ON i.id_item = inv.id_item
 GROUP BY j.id_jugador;
 GO
+
+
+-- Ranking de jugadores más ricos
 
 CREATE VIEW VW_Jugadores_Mas_Ricos AS
 SELECT 
@@ -444,6 +452,8 @@ JOIN entidad e ON j.id_jugador = e.id_entidad
 LEFT JOIN VW_Valor_Inventario_Jugador v ON v.id_jugador = j.id_jugador;
 GO
 
+
+-- Ranking de riqueza total por gremio
 
 CREATE VIEW VW_Riqueza_Gremio AS
 SELECT 
@@ -459,7 +469,9 @@ LEFT JOIN VW_Valor_Inventario_Jugador v ON v.id_jugador = j.id_jugador
 GROUP BY g.id_gremio, g.nombre_gremio, g.fondo;
 GO
 
--- Vista de jugadores con su oro actual Jugador, nombre, oro disponible, gremio
+
+-- Jugadores con su oro actual 
+
 CREATE VIEW Info_Jugador AS
 
 SELECT 
@@ -474,7 +486,8 @@ LEFT JOIN gremio g ON g.ID_Gremio = j.ID_gremio
 
 GO
 
--- Vista de jugadores con su gremio  Jugador + nombre del gremio + líder
+
+-- Jugadores con su gremio 
 
 CREATE VIEW Info_Jugador_Gremio AS
 
@@ -489,7 +502,8 @@ JOIN entidad e ON g.ID_Lider = e.ID_entidad;
 
 GO
 
---Vista de jugadores que son líderes de gremio 
+
+-- Jugadores que son líderes de gremio 
 
 CREATE VIEW Jugadores_Lideres AS
 
@@ -506,7 +520,8 @@ WHERE j.ID_jugador = g.ID_Lider
 
 GO
 
--- Vista de jugadores con sus items   Jugador + item + grado + valor
+
+-- Jugadores con sus items
 
 CREATE VIEW Jugadores_Items AS
 
@@ -535,6 +550,7 @@ AVG(e.oro_disponible) AS 'Promedio Oro de Jugadores'
 FROM jugador j
 JOIN entidad e ON j.ID_jugador = e.ID_entidad
 
+
 -- Top 5 jugadores más ricos
 
 SELECT TOP 5
@@ -546,6 +562,7 @@ FROM jugador j
 JOIN entidad e ON j.ID_jugador = e.ID_entidad
 
 ORDER BY oro_disponible DESC
+
 
 -- Top 5 gremios más ricos
 
