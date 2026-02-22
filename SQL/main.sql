@@ -79,13 +79,15 @@ CREATE TABLE vendedor_npc(
 GO
 
 CREATE TABLE item_en_inventario(
-    ID_jugador INT PRIMARY KEY NOT NULL,
+    ID_jugador INT NOT NULL,
     ID_Item INT NOT NULL,
 
     CONSTRAINT FK_IDjug_Inv
     FOREIGN KEY (ID_jugador) REFERENCES jugador(ID_jugador),
     CONSTRAINT FK_IDitem_Inv
-    FOREIGN KEY (ID_Item) REFERENCES Item(ID_Item)
+    FOREIGN KEY (ID_Item) REFERENCES Item(ID_Item),
+	CONSTRAINT PK_Inv
+	PRIMARY KEY (ID_jugador, ID_item)
 );
 GO
 
@@ -409,6 +411,7 @@ END;
 
 GO
 
+
 -- VISTAS
 
 -- Items vendidos por NPC          
@@ -477,12 +480,10 @@ CREATE VIEW Info_Jugador AS
 SELECT 
 j.ID_jugador,
 e.nombre_entidad AS Jugador, 
-g.Nombre_Gremio AS Gremio, 
 e.oro_disponible AS Oro 
 
 FROM jugador j 
 JOIN entidad e ON j.ID_jugador = e.ID_entidad
-LEFT JOIN gremio g ON g.ID_Gremio = j.ID_gremio
 
 GO
 
@@ -492,13 +493,13 @@ GO
 CREATE VIEW Info_Jugador_Gremio AS
 
 SELECT 
-j.ID_jugador AS Jugador,
-g.Nombre_Gremio AS Gremio,
-e.nombre_entidad AS Lider
+j.ID_jugador,
+e.nombre_entidad AS Nombre,
+g.Nombre_Gremio AS Gremio
 
 FROM jugador j
 JOIN gremio g ON j.ID_gremio = g.ID_Gremio
-JOIN entidad e ON g.ID_Lider = e.ID_entidad;
+JOIN entidad e ON e.ID_entidad = j.ID_jugador
 
 GO
 
@@ -521,22 +522,74 @@ WHERE j.ID_jugador = g.ID_Lider
 GO
 
 
--- Jugadores con sus items
+-- Jugadores con la info de sus items
 
 CREATE VIEW Jugadores_Items AS
 
 SELECT
 j.ID_jugador,
-e.nombre_entidad,
+e.nombre_entidad AS Nombre,
+it.ID_item,
 it.grado,
 it.tipo,
-it.valor
+it.valor,
+it.propiedades
 
 FROM item it
 JOIN item_en_inventario itinv on it.ID_Item = itinv.ID_Item
 JOIN jugador j ON j.ID_jugador = itinv.ID_jugador
 JOIN entidad e ON j.ID_jugador = e.ID_entidad
 
+GO
+
+
+-- Inventario completo de jugadores
+
+CREATE VIEW Inventario_Jugador
+AS
+SELECT iv.ID_jugador, e.nombre_entidad AS 'Nombre', iv.ID_Item, i.propiedades
+FROM item_en_inventario as iv
+INNER JOIN entidad as e on e.ID_entidad = iv.ID_jugador
+INNER JOIN item as i on i.ID_item = iv.ID_Item
+
+GO
+
+
+-- Items por valor
+
+CREATE VIEW Item_valor
+AS
+SELECT i.ID_item, i.propiedades, i.valor
+FROM item as i
+GO
+
+
+--Items por tipo
+
+CREATE VIEW Item_tipo
+AS
+SELECT i.ID_item, i.propiedades, i.tipo
+FROM item as i
+GO
+
+
+--Items por grado
+
+CREATE VIEW Item_grado
+AS
+SELECT i.ID_item, i.propiedades, i.grado
+FROM item as i
+GO
+
+
+--Items con propietario actual
+
+CREATE VIEW Item_Propietario
+AS
+SELECT i.ID_item, i.tipo, i.grado, i.valor, i.propiedades, e.nombre_entidad as 'Propietario'
+FROM item as i
+LEFT JOIN item_en_inventario as iv ON iv.ID_Item = i.ID_item
+LEFT JOIN entidad as e ON e.ID_entidad = iv.ID_jugador
 GO
 
 
@@ -573,3 +626,25 @@ Fondo
 FROM gremio
 
 ORDER BY Fondo DESC
+
+
+--Cantidad de items por tipo
+
+SELECT i.tipo, COUNT(i.tipo) AS Cantidad
+FROM item AS i
+GROUP BY i.tipo
+
+
+--Cantidad total de jugadores
+
+SELECT COUNT(j.id_jugador) AS 'Cantidad de Jugadores'
+FROM jugador as j
+
+
+--Promedio de valor de items
+
+SELECT AVG(i.valor) AS 'Promedio valor items'
+FROM item as i
+
+
+
