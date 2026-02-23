@@ -937,7 +937,7 @@ WHERE valor = (
 -- jugadores con oro sospechoso
 SELECT nombre_entidad, oro_disponible
 FROM entidad
-WHERE oro_disponible > (SELECT AVG(oro_disponible) * 10 FROM entidad)
+WHERE oro_disponible > (SELECT AVG(oro_disponible) * 50 FROM entidad)
 AND nombre_entidad IN (SELECT nombre_entidad FROM jugador);
 
 -- transferencias de oro masivo
@@ -986,14 +986,6 @@ WHERE v.oro_intercambiado < (i.valor * 0.01) -- Se vendió por menos del 1% de s
   AND i.valor > 10000                      -- Solo buscar ítems que realmente valgan la pena
 ORDER BY i.valor DESC;
 
-
---ECONOMAN
-
---indice de inflacion (mucha emision monetaria)
-SELECT 
-    (SELECT SUM(oro_disponible) FROM entidad) AS Oro_en_Jugadores,
-    (SELECT SUM(Fondo) FROM gremio) AS Oro_en_Gremios,
-    (SELECT SUM(oro_disponible) FROM entidad) + (SELECT SUM(Fondo) FROM gremio) AS Masa_Monetaria_Total;
 
 --detectar mazmorras OP
 SELECT 
