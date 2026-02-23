@@ -21,13 +21,13 @@ CREATE TABLE item(
 
     CONSTRAINT CHK_grado CHECK (grado > 0 AND grado <= 70)
 );
-
+GO
 
 CREATE TABLE propiedades(
     ID_item VARCHAR(12) NOT NULL PRIMARY KEY,
     propiedad VARCHAR(20) NOT NULL,
 
-    CONSTRAINT FK_ID_item FOREIGN KEY (ID_item)
+    CONSTRAINT FK_IDitem_prop FOREIGN KEY (ID_item)
     REFERENCES item(ID_item)
 );
 
@@ -39,8 +39,8 @@ CREATE TABLE historial_precio(
     CONSTRAINT PK_historial_precio
     PRIMARY KEY (ID_item, timestamp),
     
-    CONSTRAINT FK_ID_item FOREIGN KEY (ID_item)
-    REFERENCES item(ID_item),
+    CONSTRAINT FK_IDitem_hist FOREIGN KEY (ID_item)
+    REFERENCES item(ID_item)
 );
 
 CREATE TABLE entidad(
@@ -51,8 +51,9 @@ CREATE TABLE entidad(
 );
 
 CREATE TABLE tipo_entidad(
-    identificador_tipo VARCHAR(3) PRIMARY KEY NOT NULL,
+    identificador_tipo VARCHAR(3) PRIMARY KEY NOT NULL
 );
+GO
 
 CREATE TABLE gremio(
     ID_Gremio INT PRIMARY KEY NOT NULL,
@@ -65,8 +66,6 @@ CREATE TABLE gremio(
     CONSTRAINT FK_gremio_lider FOREIGN KEY (nombre_entidad_lider) 
     REFERENCES entidad(nombre_entidad)
 );
-
-
 
 CREATE TABLE entidad_tipo(
     nombre_entidad VARCHAR(20) NOT NULL,
@@ -86,18 +85,19 @@ CREATE TABLE item_entidad(
     CONSTRAINT PK_item_entidad
     PRIMARY KEY (ID_item, nombre_entidad),
 
-    CONSTRAINT FK_item FOREIGN KEY (ID_item)
+    CONSTRAINT FK_item_ent FOREIGN KEY (ID_item)
     REFERENCES item(ID_item),
 
     CONSTRAINT FK_entidad_item FOREIGN KEY (nombre_entidad)
     REFERENCES entidad(nombre_entidad),
 );
+GO
 
 CREATE TABLE mazmorra(
     ID_mazmorra VARCHAR(5) PRIMARY KEY,
     nivel INT NOT NULL,
     ID_Gremio INT,
-    ID_Item INT NOT NULL,
+    ID_Item varchar(12) NOT NULL,
     drop_rate INT DEFAULT 1 NOT NULL,
 
     CONSTRAINT FK_Gremio_Mazmorra FOREIGN KEY (ID_Gremio)
@@ -108,6 +108,7 @@ CREATE TABLE mazmorra(
 
     CONSTRAINT CHK_nivel CHECK (nivel > 0 AND nivel <= 60)
 );
+GO
 
 CREATE TABLE mazmorra_categoria(
     ID_mazmorra VARCHAR(5) NOT NULL PRIMARY KEY,
@@ -115,7 +116,7 @@ CREATE TABLE mazmorra_categoria(
 
     CONSTRAINT FK_Mazmorra_Cat FOREIGN KEY (ID_mazmorra)
     REFERENCES mazmorra(ID_mazmorra)
-)
+);
 
 CREATE TABLE ventas(
     id_transaccion INT PRIMARY KEY NOT NULL IDENTITY(1,1),
@@ -134,7 +135,8 @@ CREATE TABLE ventas(
     CONSTRAINT CHK_oro_intercambiado CHECK (oro_intercambiado > 0),
 
     CONSTRAINT CHK_chk_gremio CHECK (chk_gremio = 0 OR chk_gremio = 1)
-)
+);
+GO
 
 create table Detalle_Venta (
     id_transaccion INT NOT NULL,
@@ -166,14 +168,14 @@ CREATE TABLE Item_mazmorra(
 
     CONSTRAINT PK_Item_mazmorra PRIMARY KEY (ID_item, ID_mazmorra),
 
-    CONSTRAINT FK_Item FOREIGN KEY (ID_item)
+    CONSTRAINT FK_Item_maz FOREIGN KEY (ID_item)
     REFERENCES item(ID_item),
 
     CONSTRAINT FK_Mazmorra FOREIGN KEY (ID_mazmorra)
     REFERENCES mazmorra(ID_mazmorra) 
 );
+GO
 
-GO;
 --Procedimientos
 --  Tabla ITEM
 
