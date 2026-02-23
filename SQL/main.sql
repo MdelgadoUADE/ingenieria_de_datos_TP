@@ -4,7 +4,6 @@ usar para probar errores de ejecucion:
 use master
 drop database main_runescape;
 */
-
 CREATE DATABASE main_runescape
 GO
 
@@ -43,30 +42,16 @@ CREATE TABLE historial_precio(
     REFERENCES item(ID_item),
 );
 
+CREATE TABLE tipo_entidad(
+    identificador_tipo VARCHAR(3) PRIMARY KEY NOT NULL,
+);
+
 CREATE TABLE entidad(
     nombre_entidad VARCHAR(20) PRIMARY KEY NOT NULL,
     oro_disponible INT,
 
     CONSTRAINT CHK_oro_disponible CHECK (oro_disponible >= 0)
 );
-
-CREATE TABLE tipo_entidad(
-    identificador_tipo VARCHAR(3) PRIMARY KEY NOT NULL,
-);
-
-CREATE TABLE gremio(
-    ID_Gremio INT PRIMARY KEY NOT NULL,
-    nombre_gremio VARCHAR(50) NOT NULL,
-    Fondo INT NOT NULL DEFAULT 0,
-    nombre_entidad_lider VARCHAR(20) NOT NULL, -- Referencia al l�der
-
-    CONSTRAINT CHK_ID_Gremio CHECK (ID_Gremio BETWEEN 1000 AND 9999),
-    CONSTRAINT CHK_fondo CHECK (Fondo >= 0),
-    CONSTRAINT FK_gremio_lider FOREIGN KEY (nombre_entidad_lider) 
-    REFERENCES entidad(nombre_entidad)
-);
-
-
 
 CREATE TABLE entidad_tipo(
     nombre_entidad VARCHAR(20) NOT NULL,
@@ -80,6 +65,32 @@ CREATE TABLE entidad_tipo(
     CONSTRAINT FK_tipo_entidad FOREIGN KEY (identificador_tipo)
     REFERENCES tipo_entidad(identificador_tipo),
 );
+
+
+CREATE TABLE gremio(
+    ID_Gremio INT PRIMARY KEY NOT NULL,
+    nombre_gremio VARCHAR(50) NOT NULL,
+    Fondo INT NOT NULL DEFAULT 0,
+    nombre_entidad_lider VARCHAR(20) NOT NULL, -- Referencia al l�der
+
+    CONSTRAINT CHK_ID_Gremio CHECK (ID_Gremio BETWEEN 1000 AND 9999),
+    CONSTRAINT CHK_fondo CHECK (Fondo >= 0),
+    CONSTRAINT FK_gremio_lider FOREIGN KEY (nombre_entidad_lider) 
+    REFERENCES entidad(nombre_entidad)
+);
+
+CREATE TABLE jugador(
+    nombre_entidad VARCHAR(20) PRIMARY KEY NOT NULL,
+    ID_gremio INT,
+
+    CONSTRAINT FK_entidad_jugador FOREIGN KEY (nombre_entidad)
+    REFERENCES entidad(nombre_entidad),
+
+    CONSTRAINT FK_gremio_jugador FOREIGN KEY (ID_gremio)
+    REFERENCES gremio(ID_gremio)
+);
+
+
 
 CREATE TABLE item_entidad(
     ID_item VARCHAR(12) NOT NULL,
@@ -111,7 +122,18 @@ CREATE TABLE mazmorra_categoria(
 
     CONSTRAINT FK_Mazmorra_Cat FOREIGN KEY (ID_mazmorra)
     REFERENCES mazmorra(ID_mazmorra)
-)
+);
+
+
+CREATE TABLE Item_mazmorra(
+    ID_item VARCHAR(12) NOT NULL,
+    ID_mazmorra VARCHAR(5) NOT NULL,
+    drop_rate INT DEFAULT 1 NOT NULL, -- El porcentaje de drop ahora vive aqu�
+
+    CONSTRAINT PK_Item_mazmorra PRIMARY KEY (ID_item, ID_mazmorra),
+    CONSTRAINT FK_Item_IM FOREIGN KEY (ID_item) REFERENCES item(ID_item),
+    CONSTRAINT FK_Mazmorra_IM FOREIGN KEY (ID_mazmorra) REFERENCES mazmorra(ID_mazmorra)
+);
 
 CREATE TABLE ventas(
     id_transaccion INT PRIMARY KEY NOT NULL IDENTITY(1,1),
@@ -145,26 +167,7 @@ create table Detalle_Venta (
     REFERENCES Item(id_item)
 );
 
-CREATE TABLE jugador(
-    nombre_entidad VARCHAR(20) PRIMARY KEY NOT NULL,
-    ID_gremio INT NOT NULL,
 
-    CONSTRAINT FK_entidad_jugador FOREIGN KEY (nombre_entidad)
-    REFERENCES entidad(nombre_entidad),
-
-    CONSTRAINT FK_gremio_jugador FOREIGN KEY (ID_gremio)
-    REFERENCES gremio(ID_gremio)
-);
-
-CREATE TABLE Item_mazmorra(
-    ID_item VARCHAR(12) NOT NULL,
-    ID_mazmorra VARCHAR(5) NOT NULL,
-    drop_rate INT DEFAULT 1 NOT NULL, -- El porcentaje de drop ahora vive aqu�
-
-    CONSTRAINT PK_Item_mazmorra PRIMARY KEY (ID_item, ID_mazmorra),
-    CONSTRAINT FK_Item_IM FOREIGN KEY (ID_item) REFERENCES item(ID_item),
-    CONSTRAINT FK_Mazmorra_IM FOREIGN KEY (ID_mazmorra) REFERENCES mazmorra(ID_mazmorra)
-);
 
 GO
 --Procedimientos
@@ -458,7 +461,7 @@ BEGIN
     WHERE id_transaccion = @id_transaccion AND id_item = @id_item
 END
 
-GO;
+GO
 
 CREATE PROCEDURE Borrar_Detalle_Venta
 @id_transaccion INT,
@@ -469,7 +472,7 @@ BEGIN
     WHERE id_transaccion = @id_transaccion AND id_item = @id_item
 END
 
-GO;
+GO
 
 --  Tabla jugador
 
@@ -508,13 +511,11 @@ GO;
 CREATE PROCEDURE Insertar_Mazmorra
 @ID_mazmorra VARCHAR(5),
 @nivel INT,
-@ID_Gremio INT,
-@categoria VARCHAR(20)
-
+@ID_Gremio INT
 AS
 BEGIN
-    INSERT INTO mazmorra (ID_mazmorra, nivel, ID_Gremio, categoria)
-    VALUES (@ID_mazmorra, @nivel, @ID_Gremio, @categoria)
+    INSERT INTO mazmorra (ID_mazmorra, nivel, ID_Gremio)
+    VALUES (@ID_mazmorra, @nivel, @ID_Gremio)
 END
 
 GO;
@@ -522,14 +523,12 @@ GO;
 CREATE PROCEDURE Modificar_Mazmorra
 @ID_mazmorra VARCHAR(5),
 @nivel INT,
-@ID_Gremio INT,
-@categoria VARCHAR(20)
+@ID_Gremio INT
 AS
 BEGIN
     UPDATE mazmorra
     SET nivel = @nivel,
-        ID_Gremio = @ID_Gremio,
-        categoria = @categoria
+        ID_Gremio = @ID_Gremio
     WHERE ID_mazmorra = @ID_mazmorra
 END
 
