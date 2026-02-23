@@ -899,4 +899,33 @@ SELECT AVG(i.valor) AS 'Promedio valor items'
 FROM item as i
 
 
+--Gremios sin miembros
 
+SELECT g.ID_Gremio, g.nombre_gremio
+FROM gremio g
+LEFT JOIN jugador j ON j.ID_gremio = g.ID_Gremio
+WHERE j.nombre_entidad IS NULL;
+
+
+--Miembros de un gremio específico
+
+DECLARE @ID_Gremio INT = 1000; -- Cambiar por el que quieran
+
+SELECT 
+    j.nombre_entidad AS Jugador,
+    e.oro_disponible,
+    g.nombre_gremio
+FROM jugador j
+JOIN entidad e ON j.nombre_entidad = e.nombre_entidad
+JOIN gremio g ON j.ID_gremio = g.ID_Gremio
+WHERE j.ID_gremio = @ID_Gremio;
+
+
+--Items de grado máximo
+
+SELECT *
+FROM item
+WHERE grado = (
+    SELECT MAX(grado)
+    FROM item
+);
