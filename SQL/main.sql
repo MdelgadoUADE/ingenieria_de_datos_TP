@@ -4,6 +4,7 @@ usar para probar errores de ejecucion:
 use master
 drop database main_runescape;
 */
+
 CREATE DATABASE main_runescape
 GO
 
@@ -484,7 +485,7 @@ BEGIN
     INSERT INTO jugador (nombre_entidad, ID_gremio)
     VALUES (@nombre_entidad, @ID_gremio)
 END
-GO;
+GO
 
 CREATE PROCEDURE Modificar_jugador
     @nombre_entidad VARCHAR(20),
@@ -495,7 +496,7 @@ BEGIN
     SET ID_gremio = @ID_gremio
     WHERE nombre_entidad = @nombre_entidad
 END
-GO;
+GO
 
 CREATE PROCEDURE Borrar_jugador
     @nombre_entidad VARCHAR(20)
@@ -504,7 +505,7 @@ BEGIN
     DELETE FROM jugador
     WHERE nombre_entidad = @nombre_entidad
 END
-GO;
+GO
 
 --  Tabla Mazmorra
 
@@ -518,7 +519,7 @@ BEGIN
     VALUES (@ID_mazmorra, @nivel, @ID_Gremio)
 END
 
-GO;
+GO
 
 CREATE PROCEDURE Modificar_Mazmorra
 @ID_mazmorra VARCHAR(5),
@@ -532,7 +533,7 @@ BEGIN
     WHERE ID_mazmorra = @ID_mazmorra
 END
 
-GO;
+GO
 
 CREATE PROCEDURE Borrar_Mazmorra
 @ID_mazmorra VARCHAR(5)
@@ -542,7 +543,7 @@ BEGIN
     WHERE ID_mazmorra = @ID_mazmorra
 END
 
-GO;
+GO
 
 --  Tabla Item_Entidad
 
@@ -555,7 +556,7 @@ BEGIN
     VALUES (@id_item, @nombre_entidad)
 END
 
-GO;
+GO
 
 CREATE PROCEDURE Modificar_item_entidad
 @id_item VARCHAR(12),
@@ -568,7 +569,7 @@ BEGIN
     WHERE id_item = @id_item AND nombre_entidad = @nombre_entidad
 END
 
-GO;
+GO
 
 CREATE PROCEDURE Borrar_item_entidad
 @id_item VARCHAR(12),
@@ -579,7 +580,7 @@ BEGIN
     WHERE id_item = @id_item AND nombre_entidad = @nombre_entidad
 END
 
-GO;
+GO
 
 --  Tabla Item_Mazmorra
 
@@ -593,7 +594,7 @@ BEGIN
     VALUES (@ID_item, @ID_mazmorra, @drop_rate)
 END
 
-GO;
+GO
 
 CREATE PROCEDURE Modificar_item_mazmorra
 @ID_item VARCHAR(12),
@@ -606,7 +607,7 @@ BEGIN
     WHERE ID_item = @ID_item AND ID_mazmorra = @ID_mazmorra
 END
 
-GO;
+GO
 
 CREATE PROCEDURE Borrar_item_mazmorra
 @ID_item VARCHAR(12),
@@ -617,7 +618,7 @@ BEGIN
     WHERE ID_item = @ID_item AND ID_mazmorra = @ID_mazmorra
 END
 
-GO;
+GO
 
 CREATE PROCEDURE Crear_mazmorra_categoria
 @ID_mazmorra VARCHAR(5),
@@ -628,7 +629,7 @@ BEGIN
     VALUES (@ID_mazmorra, @categoria)
 END
 
-GO;
+GO
 
 CREATE PROCEDURE Modificar_Mazmorra_Categoria
 @ID_mazmorra VARCHAR(5),
@@ -640,7 +641,7 @@ BEGIN
     WHERE ID_mazmorra = @ID_mazmorra and categoria = @categoria
 END
 
-GO;
+GO
 
 CREATE PROCEDURE Borrar_Mazmorra_Categoria
 @ID_mazmorra VARCHAR(5),
@@ -651,7 +652,7 @@ BEGIN
     WHERE ID_mazmorra = @ID_mazmorra and categoria = @categoria
 END
 
-GO;
+GO
 
 -- VISTAS
 
@@ -684,7 +685,7 @@ GO
 
 -- Ranking de jugadores mas ricos
 
-ALTER VIEW VW_Jugadores_Mas_Ricos AS
+CREATE VIEW VW_Jugadores_Mas_Ricos AS
 SELECT 
     e.nombre_entidad,
     e.oro_disponible,
@@ -775,7 +776,7 @@ GO
 
 -- Items por valor
 
-ALTER VIEW Item_valor AS
+CREATE VIEW Item_valor AS
 SELECT i.ID_item, p.propiedad, i.valor
 FROM item i
 LEFT JOIN propiedades p ON i.ID_item = p.ID_item;
