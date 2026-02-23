@@ -656,6 +656,21 @@ GO
 
 -- VISTAS
 
+-- Integrantes de los gremios
+CREATE OR ALTER VIEW VW_Gremio_Integrantes AS
+SELECT 
+    g.nombre_gremio AS Gremio,
+    j.nombre_entidad AS Nombre_Integrante,
+    e.oro_disponible AS Oro_Individual,
+    CASE 
+        WHEN g.nombre_entidad_lider = j.nombre_entidad THEN 'Líder'
+        ELSE 'Miembro'
+    END AS Rango_Gremio
+FROM gremio g
+JOIN jugador j ON g.ID_Gremio = j.ID_gremio
+JOIN entidad e ON j.nombre_entidad = e.nombre_entidad;
+GO
+
 -- Items vendidos por NPC          
 
 CREATE VIEW VW_Items_Vendidos_NPC AS
@@ -708,6 +723,20 @@ LEFT JOIN jugador j ON j.id_gremio = g.id_gremio
 LEFT JOIN entidad e ON j.nombre_entidad = e.nombre_entidad
 LEFT JOIN VW_Valor_Inventario_Jugador v ON v.nombre_entidad = e.nombre_entidad
 GROUP BY g.id_gremio, g.nombre_gremio, g.fondo;
+GO
+
+--Dropeos de mazmorras
+CREATE VIEW VW_Mazmorras_Drops AS
+SELECT 
+    m.ID_mazmorra,
+    mc.categoria,
+    m.nivel AS nivel_requerido,
+    i.ID_item,
+    im.drop_rate
+FROM mazmorra m
+JOIN mazmorra_categoria mc ON m.ID_mazmorra = mc.ID_mazmorra
+JOIN Item_mazmorra im ON m.ID_mazmorra = im.ID_mazmorra
+JOIN item i ON im.ID_item = i.ID_item;
 GO
 
 -- Jugadores con su oro actual 
