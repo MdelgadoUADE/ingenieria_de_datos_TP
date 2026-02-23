@@ -687,6 +687,7 @@ WHERE et.identificador_tipo = 'NPC'
 GROUP BY v.nombre_entidad_vendedor, dv.id_item;
 GO
 
+
 -- Valor total del inventario por jugador
 
 CREATE VIEW VW_Valor_Inventario_Jugador AS
@@ -713,6 +714,10 @@ JOIN entidad e ON j.nombre_entidad = e.nombre_entidad
 LEFT JOIN VW_Valor_Inventario_Jugador v ON v.nombre_entidad = e.nombre_entidad;
 GO
 
+SELECT * FROM VW_Jugadores_Mas_Ricos ORDER BY 4 DESC
+GO
+
+
 -- Ranking de riqueza total por gremio
 
 CREATE VIEW VW_Riqueza_Gremio AS
@@ -725,6 +730,9 @@ LEFT JOIN jugador j ON j.id_gremio = g.id_gremio
 LEFT JOIN entidad e ON j.nombre_entidad = e.nombre_entidad
 LEFT JOIN VW_Valor_Inventario_Jugador v ON v.nombre_entidad = e.nombre_entidad
 GROUP BY g.id_gremio, g.nombre_gremio, g.fondo;
+GO
+
+SELECT * FROM VW_Riqueza_Gremio ORDER BY 3 DESC
 GO
 
 
@@ -796,9 +804,11 @@ GO
 
 CREATE VIEW Item_valor
 AS
-SELECT i.ID_item, p.propiedad, i.valor
+SELECT i.ID_item, i.valor
 FROM item as i
-LEFT JOIN propiedades p ON i.ID_item = p.ID_item;
+GO
+
+SELECT * FROM Item_valor ORDER BY 2 DESC
 GO
 
 
@@ -810,6 +820,9 @@ SELECT i.ID_item, i.tipo
 FROM item as i
 GO
 
+SELECT * FROM Item_tipo ORDER BY 2 DESC
+GO
+
 
 --Items por grado
 
@@ -817,6 +830,9 @@ CREATE VIEW Item_grado
 AS
 SELECT i.ID_item, i.grado
 FROM item as i
+GO
+
+SELECT * FROM Item_grado ORDER BY 2 DESC
 GO
 
 
@@ -834,13 +850,68 @@ LEFT JOIN item_entidad ie ON i.ID_item = ie.ID_item;
 GO
 
 
+--Gremios con su líder 
+
+CREATE VIEW Gremios_info
+AS
+SELECT 
+	g.ID_Gremio,
+    g.Nombre_Gremio AS Gremio,
+    g.nombre_entidad_lider AS Lider
+FROM gremio g
+GO
+
+
+--Gremios con cantidad de miembros 
+
+CREATE VIEW VW_Gremios_Cantidad_Miembros
+AS
+SELECT 
+    g.ID_Gremio,
+    g.Nombre_Gremio as Gremio,
+    COUNT(j.nombre_entidad) AS Cantidad_Miembros
+FROM gremio g
+LEFT JOIN jugador j 
+    ON g.ID_Gremio = j.ID_gremio
+GROUP BY 
+    g.ID_Gremio,
+    g.Nombre_Gremio;
+GO
+
+
+--Jugadores sin gremio
+
+CREATE VIEW VW_Jugadores_Sin_Gremio
+AS
+SELECT 
+j.nombre_entidad as Jugador
+FROM jugador as j
+WHERE j.ID_gremio IS NULL;
+GO
+
+
+-- Gremios ordenados por fondo
+
+CREATE VIEW VW_Ranking_Economico_Gremios
+AS
+SELECT 
+    ID_Gremio,
+    Nombre_Gremio,
+    Fondo
+FROM gremio;
+GO
+
+SELECT *
+FROM VW_Ranking_Economico_Gremios
+ORDER BY Fondo DESC;
+
+
 -- CONSULTAS
 
 -- Promedio de oro por jugador
 
 SELECT 
 AVG(e.oro_disponible) AS 'Promedio Oro de Jugadores'
-
 FROM jugador j
 JOIN entidad e ON j.nombre_entidad = e.nombre_entidad;
 
@@ -859,9 +930,7 @@ ORDER BY oro_disponible DESC;
 SELECT TOP 5
 Nombre_Gremio,
 Fondo
-
 FROM gremio
-
 ORDER BY Fondo DESC
 
 
@@ -876,6 +945,7 @@ GROUP BY i.tipo
 
 SELECT COUNT(nombre_entidad) AS 'Cantidad de Jugadores'
 FROM jugador;
+
 
 --Promedio de valor de items
 
@@ -907,9 +977,20 @@ WHERE j.ID_gremio = @ID_Gremio;
 
 -- Items de grado máximo
 
-SELECT *
-FROM item
+SELECT i.ID_item, i.grado
+FROM item as i
 WHERE grado = (
     SELECT MAX(grado)
     FROM item
 );
+
+
+--Cantidad items por jugador
+
+SELECT 
+    inv.nombre_entidad AS Jugador,
+    COUNT(inv.ID_item) AS Cantidad_Items
+FROM item_entidad as inv
+GROUP BY 
+    inv.nombre_entidad
+ORDER BY Cantidad_Items DESC;
