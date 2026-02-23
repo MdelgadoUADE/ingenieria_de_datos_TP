@@ -99,25 +99,12 @@ CREATE TABLE mazmorra(
     ID_mazmorra VARCHAR(5) PRIMARY KEY,
     nivel INT NOT NULL,
     ID_Gremio INT,
-    ID_Item varchar(12) NOT NULL,
-    drop_rate INT DEFAULT 1 NOT NULL,
+    categoria VARCHAR(20),
 
-    CONSTRAINT FK_Gremio_Mazmorra FOREIGN KEY (ID_Gremio)
+CONSTRAINT FK_Gremio_Mazmorra FOREIGN KEY (ID_Gremio) 
     REFERENCES gremio(ID_Gremio),
-
-    CONSTRAINT FK_Item_Mazmorra FOREIGN KEY (ID_Item)
-    REFERENCES item(ID_item),
-
-    CONSTRAINT CHK_nivel CHECK (nivel > 0 AND nivel <= 60)
+CONSTRAINT CHK_nivel CHECK (nivel > 0 AND nivel <= 60)
 );
-
-CREATE TABLE mazmorra_categoria(
-    ID_mazmorra VARCHAR(5) NOT NULL PRIMARY KEY,
-    categoria VARCHAR(20) NOT NULL,
-
-    CONSTRAINT FK_Mazmorra_Cat FOREIGN KEY (ID_mazmorra)
-    REFERENCES mazmorra(ID_mazmorra)
-)
 
 CREATE TABLE ventas(
     id_transaccion INT PRIMARY KEY NOT NULL IDENTITY(1,1),
@@ -165,14 +152,11 @@ CREATE TABLE jugador(
 CREATE TABLE Item_mazmorra(
     ID_item VARCHAR(12) NOT NULL,
     ID_mazmorra VARCHAR(5) NOT NULL,
+    drop_rate INT DEFAULT 1 NOT NULL, -- El porcentaje de drop ahora vive aquí
 
     CONSTRAINT PK_Item_mazmorra PRIMARY KEY (ID_item, ID_mazmorra),
-
-    CONSTRAINT FK_Item FOREIGN KEY (ID_item)
-    REFERENCES item(ID_item),
-
-    CONSTRAINT FK_Mazmorra FOREIGN KEY (ID_mazmorra)
-    REFERENCES mazmorra(ID_mazmorra) 
+    CONSTRAINT FK_Item_IM FOREIGN KEY (ID_item) REFERENCES item(ID_item),
+    CONSTRAINT FK_Mazmorra_IM FOREIGN KEY (ID_mazmorra) REFERENCES mazmorra(ID_mazmorra)
 );
 
 GO
@@ -518,12 +502,12 @@ CREATE PROCEDURE Insertar_Mazmorra
 @ID_mazmorra VARCHAR(5),
 @nivel INT,
 @ID_Gremio INT,
-@ID_Item varchar(12),
-@drop_rate INT
+@categoria VARCHAR(20)
+
 AS
 BEGIN
-    INSERT INTO mazmorra (ID_mazmorra, nivel, ID_Gremio, ID_Item, drop_rate)
-    VALUES (@ID_mazmorra, @nivel, @ID_Gremio, @ID_Item, @drop_rate)
+    INSERT INTO mazmorra (ID_mazmorra, nivel, ID_Gremio, categoria)
+    VALUES (@ID_mazmorra, @nivel, @ID_Gremio, @categoria)
 END
 
 GO
@@ -532,15 +516,13 @@ CREATE PROCEDURE Modificar_Mazmorra
 @ID_mazmorra VARCHAR(5),
 @nivel INT,
 @ID_Gremio INT,
-@ID_Item varchar(12),
-@drop_rate INT
+@categoria VARCHAR(20)
 AS
 BEGIN
     UPDATE mazmorra
     SET nivel = @nivel,
         ID_Gremio = @ID_Gremio,
-        ID_Item = @ID_Item,
-        drop_rate = @drop_rate
+        categoria = @categoria
     WHERE ID_mazmorra = @ID_mazmorra
 END
 
@@ -551,41 +533,6 @@ CREATE PROCEDURE Borrar_Mazmorra
 AS
 BEGIN
     DELETE FROM mazmorra
-    WHERE ID_mazmorra = @ID_mazmorra
-END
-
-GO
-
---  Tabla Mazmorra_Categoria
-
-CREATE PROCEDURE Insertar_Mazmorra_Categoria
-@ID_mazmorra VARCHAR(5),
-@categoria VARCHAR(20)
-AS
-BEGIN
-    INSERT INTO mazmorra_categoria (ID_mazmorra, categoria)
-    VALUES (@ID_mazmorra, @categoria)
-END
-
-GO
-
-CREATE PROCEDURE Modificar_Mazmorra_Categoria
-@ID_mazmorra VARCHAR(5),
-@categoria VARCHAR(20)
-AS
-BEGIN
-    UPDATE mazmorra_categoria
-    SET categoria = @categoria
-    WHERE ID_mazmorra = @ID_mazmorra
-END
-
-GO
-
-CREATE PROCEDURE Borrar_Mazmorra_Categoria
-@ID_mazmorra VARCHAR(5)
-AS
-BEGIN
-    DELETE FROM mazmorra_categoria
     WHERE ID_mazmorra = @ID_mazmorra
 END
 
@@ -632,23 +579,24 @@ GO
 
 CREATE PROCEDURE Insertar_item_mazmorra
 @ID_item VARCHAR(12),
-@ID_mazmorra VARCHAR(5)
+@ID_mazmorra VARCHAR(5),
+@drop_rate INT -- Agregamos este parámetro
 AS
 BEGIN
-    INSERT INTO item_mazmorra (ID_item, ID_mazmorra)
-    VALUES (@ID_item, @ID_mazmorra)
+    INSERT INTO item_mazmorra (ID_item, ID_mazmorra, drop_rate)
+    VALUES (@ID_item, @ID_mazmorra, @drop_rate)
 END
 
 GO
 
 CREATE PROCEDURE Modificar_item_mazmorra
 @ID_item VARCHAR(12),
-@ID_mazmorra VARCHAR(5)
+@ID_mazmorra VARCHAR(5),
+@nuevo_drop_rate INT -- Agregamos el parámetro que realmente queremos cambiar
 AS
 BEGIN
     UPDATE item_mazmorra
-    SET ID_item = @ID_item,
-        ID_mazmorra = @ID_mazmorra
+    SET drop_rate = @nuevo_drop_rate
     WHERE ID_item = @ID_item AND ID_mazmorra = @ID_mazmorra
 END
 
