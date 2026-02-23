@@ -36,21 +36,11 @@ CREATE TABLE historial_precio(
     valor INT NOT NULL,
     timestamp DATETIME NOT NULL DEFAULT SYSDATETIME(),
 
-    CONTSTRAINT PK_historial_precio
+    CONSTRAINT PK_historial_precio
     PRIMARY KEY (ID_item, timestamp),
     
     CONSTRAINT FK_ID_item FOREIGN KEY (ID_item)
     REFERENCES item(ID_item),
-);
-
-CREATE TABLE gremio(
-	ID_Gremio INT PRIMARY KEY NOT NULL,
-	nombre_gremio VARCHAR(50) NOT NULL,
-	Fondo INT NOT NULL DEFAULT 0,
-	nombre_entidad INT NOT NULL,
-
-    CONSTRAINT CHK_ID_Gremio CHECK (ID_Gremio BETWEEN 1000 AND 9999),
-    CONSTRAINT CHK_fondo CHECK (Fondo > 0),
 );
 
 CREATE TABLE entidad(
@@ -62,7 +52,21 @@ CREATE TABLE entidad(
 
 CREATE TABLE tipo_entidad(
     identificador_tipo VARCHAR(3) PRIMARY KEY NOT NULL,
-)
+);
+
+CREATE TABLE gremio(
+    ID_Gremio INT PRIMARY KEY NOT NULL,
+    nombre_gremio VARCHAR(50) NOT NULL,
+    Fondo INT NOT NULL DEFAULT 0,
+    nombre_entidad_lider VARCHAR(20) NOT NULL, -- Referencia al líder
+
+    CONSTRAINT CHK_ID_Gremio CHECK (ID_Gremio BETWEEN 1000 AND 9999),
+    CONSTRAINT CHK_fondo CHECK (Fondo >= 0),
+    CONSTRAINT FK_gremio_lider FOREIGN KEY (nombre_entidad_lider) 
+    REFERENCES entidad(nombre_entidad)
+);
+
+
 
 CREATE TABLE entidad_tipo(
     nombre_entidad VARCHAR(20) NOT NULL,
@@ -73,7 +77,7 @@ CREATE TABLE entidad_tipo(
 
     CONSTRAINT FK_tipo_entidad FOREIGN KEY (identificador_tipo)
     REFERENCES tipo_entidad(identificador_tipo),
-)
+);
 
 CREATE TABLE item_entidad(
     ID_item VARCHAR(12) NOT NULL,
@@ -87,7 +91,7 @@ CREATE TABLE item_entidad(
 
     CONSTRAINT FK_entidad_item FOREIGN KEY (nombre_entidad)
     REFERENCES entidad(nombre_entidad),
-)
+);
 
 CREATE TABLE mazmorra(
     ID_mazmorra VARCHAR(5) PRIMARY KEY,
@@ -276,32 +280,30 @@ GO;
 --  Tabla Gremio
 
 CREATE PROCEDURE Insertar_gremio
-@ID_Gremio INT,
-@Nombre_Gremio VARCHAR(50),
-@Fondo INT,
-@nombre_entidad INT
+    @ID_Gremio INT,
+    @Nombre_Gremio VARCHAR(50),
+    @Fondo INT,
+    @nombre_entidad_lider VARCHAR(20)
 AS
 BEGIN
-    INSERT INTO Gremio (ID_Gremio, Nombre_Gremio, Fondo, ID_Lider)
-    VALUES (@ID_Gremio, @Nombre_Gremio, @Fondo, @ID_Lider)
+    INSERT INTO gremio (ID_Gremio, nombre_gremio, Fondo, nombre_entidad_lider)
+    VALUES (@ID_Gremio, @Nombre_Gremio, @Fondo, @nombre_entidad_lider)
 END
-
 GO;
 
 CREATE PROCEDURE Modificar_Gremio
-@ID_Gremio INT,
-@Nombre_Gremio VARCHAR(50),
-@Fondo INT,
-@nombre_entidad INT
+    @ID_Gremio INT,
+    @Nombre_Gremio VARCHAR(50),
+    @Fondo INT,
+    @nombre_entidad_lider VARCHAR(20)
 AS
 BEGIN
-    UPDATE Gremio
-    SET Nombre_Gremio = @Nombre_Gremio,
+    UPDATE gremio
+    SET nombre_gremio = @Nombre_Gremio,
         Fondo = @Fondo,
-        ID_Lider = @ID_Lider
+        nombre_entidad_lider = @nombre_entidad_lider
     WHERE ID_Gremio = @ID_Gremio
 END
-
 GO;
 
 CREATE PROCEDURE Borrar_Gremio
@@ -479,36 +481,33 @@ GO;
 --  Tabla jugador
 
 CREATE PROCEDURE Insertar_jugador
-@nombre_entidad VARCHAR(12),
-@ID_gremio INT
+    @nombre_entidad VARCHAR(20),
+    @ID_gremio INT
 AS
 BEGIN
-    INSERT INTO jugador (id_jugador, ID_gremio)
-    VALUES (@id_jugador, @ID_gremio)
+    INSERT INTO jugador (nombre_entidad, ID_gremio)
+    VALUES (@nombre_entidad, @ID_gremio)
 END
-
 GO;
 
 CREATE PROCEDURE Modificar_jugador
-@id_jugador INT,
-@ID_gremio INT
+    @nombre_entidad VARCHAR(20),
+    @ID_gremio INT
 AS
 BEGIN
     UPDATE jugador
     SET ID_gremio = @ID_gremio
-    WHERE id_jugador = @id_jugador
+    WHERE nombre_entidad = @nombre_entidad
 END
-
 GO;
 
 CREATE PROCEDURE Borrar_jugador
-@id_jugador INT
+    @nombre_entidad VARCHAR(20)
 AS
 BEGIN
     DELETE FROM jugador
-    WHERE id_jugador = @id_jugador
+    WHERE nombre_entidad = @nombre_entidad
 END
-
 GO;
 
 --  Tabla Mazmorra
@@ -670,27 +669,28 @@ GO;
 
 CREATE VIEW VW_Items_Vendidos_NPC AS
 SELECT 
-    n.id_vendedor_npc,
+    e.nombre_entidad AS NPC_Vendedor,
     dv.id_item,
     COUNT(*) AS cantidad_vendida
-FROM Seguimiento_Venta_NPC n
-JOIN Seguimiento_Venta v ON v.id_venta = n.id_venta
-JOIN Detalle_Venta dv ON dv.id_venta = v.id_venta
-WHERE n.es_compra = 1   -- jugador compra ? npc vende
-GROUP BY n.id_vendedor_npc, dv.id_item;
+FROM ventas v
+JOIN Detalle_Venta dv ON v.id_transaccion = dv.id_transaccion
+JOIN entidad e ON v.id_vendedor = e.id_entidad
+JOIN entidad_tipo et ON e.id_entidad = et.id_entidad
+WHERE et.identificador_tipo = 'NPC' -- Filtro por tipo de entidad
+GROUP BY e.nombre_entidad, dv.id_item;
 GO
-
 
 -- Valor total del inventario por jugador
 
 CREATE VIEW VW_Valor_Inventario_Jugador AS
 SELECT 
-    j.id_jugador,
+    ie.id_entidad,
+    e.nombre_entidad,
     SUM(i.valor) AS valor_total_inventario
-FROM jugador j
-LEFT JOIN item_en_inventario inv ON j.id_jugador = inv.id_jugador
-LEFT JOIN item i ON i.id_item = inv.id_item
-GROUP BY j.id_jugador;
+FROM item_entidad ie
+JOIN item i ON i.ID_item = ie.ID_item
+JOIN entidad e ON ie.id_entidad = e.id_entidad
+GROUP BY ie.id_entidad, e.nombre_entidad;
 GO
 
 
@@ -698,15 +698,14 @@ GO
 
 CREATE VIEW VW_Jugadores_Mas_Ricos AS
 SELECT 
-    j.id_jugador,
+    e.nombre_entidad,
     e.oro_disponible,
-    ISNULL(v.valor_total_inventario,0) AS valor_inventario,
-    e.oro_disponible + ISNULL(v.valor_total_inventario,0) AS riqueza_total
+    ISNULL(v.valor_total_inventario, 0) AS valor_items,
+    e.oro_disponible + ISNULL(v.valor_total_inventario, 0) AS riqueza_total
 FROM jugador j
-JOIN entidad e ON j.id_jugador = e.id_entidad
-LEFT JOIN VW_Valor_Inventario_Jugador v ON v.id_jugador = j.id_jugador;
+JOIN entidad e ON j.id_entidad = e.id_entidad
+LEFT JOIN VW_Valor_Inventario_Jugador v ON v.id_entidad = j.id_entidad;
 GO
-
 
 -- Ranking de riqueza total por gremio
 
@@ -743,16 +742,11 @@ GO
 -- Jugadores con su gremio 
 
 CREATE VIEW Info_Jugador_Gremio AS
-
 SELECT 
-j.ID_jugador,
-e.nombre_entidad AS Nombre,
-g.Nombre_Gremio AS Gremio
-
+    j.nombre_entidad,
+    g.nombre_gremio AS Gremio
 FROM jugador j
-JOIN gremio g ON j.ID_gremio = g.ID_Gremio
-JOIN entidad e ON e.ID_entidad = j.ID_jugador
-
+JOIN gremio g ON j.ID_gremio = g.ID_Gremio;
 GO
 
 
@@ -797,13 +791,16 @@ GO
 
 -- Inventario completo de jugadores
 
-CREATE VIEW Inventario_Jugador
-AS
-SELECT iv.ID_jugador, e.nombre_entidad AS 'Nombre', iv.ID_Item, i.propiedades
-FROM item_en_inventario as iv
-INNER JOIN entidad as e on e.ID_entidad = iv.ID_jugador
-INNER JOIN item as i on i.ID_item = iv.ID_Item
-
+CREATE VIEW Inventario_Jugador AS
+SELECT 
+    e.nombre_entidad AS Propietario, 
+    ie.ID_item, 
+    i.tipo,
+    i.grado,
+    i.valor
+FROM item_entidad ie
+JOIN entidad e ON ie.id_entidad = e.id_entidad
+JOIN item i ON ie.ID_item = i.ID_item;
 GO
 
 
@@ -836,12 +833,15 @@ GO
 
 --Items con propietario actual
 
-CREATE VIEW Item_Propietario
-AS
-SELECT i.ID_item, i.tipo, i.grado, i.valor, i.propiedades, e.nombre_entidad as 'Propietario'
-FROM item as i
-LEFT JOIN item_en_inventario as iv ON iv.ID_Item = i.ID_item
-LEFT JOIN entidad as e ON e.ID_entidad = iv.ID_jugador
+CREATE VIEW Item_Propietario AS
+SELECT 
+    i.ID_item, 
+    i.tipo, 
+    i.grado, 
+    i.valor, 
+    ie.nombre_entidad AS Propietario
+FROM item i
+LEFT JOIN item_entidad ie ON i.ID_item = ie.ID_item;
 GO
 
 
@@ -859,14 +859,10 @@ JOIN entidad e ON j.ID_jugador = e.ID_entidad
 -- Top 5 jugadores mas ricos
 
 SELECT TOP 5
-j.ID_jugador,
-e.nombre_entidad,
-e.oro_disponible
-
-FROM jugador j
-JOIN entidad e ON j.ID_jugador = e.ID_entidad
-
-ORDER BY oro_disponible DESC
+    nombre_entidad,
+    oro_disponible
+FROM entidad
+ORDER BY oro_disponible DESC;
 
 
 -- Top 5 gremios mas ricos
@@ -889,9 +885,8 @@ GROUP BY i.tipo
 
 --Cantidad total de jugadores
 
-SELECT COUNT(j.id_jugador) AS 'Cantidad de Jugadores'
-FROM jugador as j
-
+SELECT COUNT(nombre_entidad) AS 'Cantidad de Jugadores'
+FROM jugador;
 
 --Promedio de valor de items
 
@@ -921,7 +916,7 @@ JOIN gremio g ON j.ID_gremio = g.ID_Gremio
 WHERE j.ID_gremio = @ID_Gremio;
 
 
---Items de grado máximo
+-- Items de grado máximo
 
 SELECT *
 FROM item
