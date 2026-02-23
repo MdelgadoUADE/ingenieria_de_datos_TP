@@ -676,6 +676,15 @@ GO
 --=====================================================================================================================
 -- VISTAS
 --=====================================================================================================================
+--promedio oro jugador
+CREATE OR ALTER VIEW VW_Promedio_Oro_Jugador AS
+SELECT 
+    COUNT(j.nombre_entidad) AS Total_Jugadores,
+    SUM(e.oro_disponible) AS Oro_Total_Acumulado,
+    AVG(e.oro_disponible) AS Promedio_Oro_Global
+FROM jugador j
+JOIN entidad e ON j.nombre_entidad = e.nombre_entidad;
+GO
 -- Integrantes de los gremios
 CREATE VIEW VW_Gremio_Integrantes AS
 SELECT 
@@ -832,22 +841,33 @@ FROM item i
 LEFT JOIN propiedades p ON i.ID_item = p.ID_item;
 GO
 
-
---Items por tipo
-
-CREATE VIEW Item_tipo AS
-SELECT i.ID_item, i.tipo 
-FROM item AS i;
+-- Poder militar gremio
+CREATE VIEW VW_Poder_Militar_Gremio AS
+SELECT 
+    g.nombre_gremio,
+    COUNT(j.nombre_entidad) AS Cantidad_Miembros,
+    SUM(i.grado) AS Score_Poder_Total,
+    AVG(i.grado) AS Calidad_Promedio_Equipo
+FROM gremio g
+JOIN jugador j ON g.ID_Gremio = j.ID_gremio
+JOIN item_entidad ie ON j.nombre_entidad = ie.nombre_entidad
+JOIN item i ON ie.ID_item = i.ID_item
+GROUP BY g.nombre_gremio;
 GO
 
 
---Items por grado
-
-CREATE VIEW Item_grado AS
-SELECT i.ID_item, i.grado 
-FROM item AS i;
+--Top items mas vendidos
+CREATE VIEW VW_Top_Items_Mas_Vendidos AS
+SELECT 
+    i.ID_item,
+    i.tipo,
+    COUNT(dv.id_transaccion) AS Veces_Vendido,
+    AVG(v.oro_intercambiado) AS Precio_Promedio_Mercado
+FROM item i
+JOIN Detalle_Venta dv ON i.ID_item = dv.id_item
+JOIN ventas v ON dv.id_transaccion = v.id_transaccion
+GROUP BY i.ID_item, i.tipo;
 GO
-
 
 --Items con propietario actual
 
@@ -865,23 +885,6 @@ GO
 --=====================================================================================================================
 -- CONSULTAS
 --=====================================================================================================================
-/*-- Promedio de oro por jugador -- cambiara vista
-
-SELECT 
-AVG(e.oro_disponible) AS 'Promedio Oro de Jugadores'
-
-FROM jugador j
-JOIN entidad e ON j.nombre_entidad = e.nombre_entidad;
-
-
--- Top 5 jugadores mas ricos
-
-SELECT TOP 5
-    nombre_entidad,
-    oro_disponible
-FROM entidad
-ORDER BY oro_disponible DESC;*/
-
 
 -- Top 5 gremios mas ricos -- se hace con los jugadores de cada gremio
 
@@ -901,13 +904,6 @@ FROM gremio g
 JOIN mazmorra m ON g.ID_Gremio = m.ID_Gremio
 WHERE m.nivel > 40
 ORDER BY m.nivel DESC;
-
-
-/*
---Cantidad total de jugadores --pasar a vista
-
-SELECT COUNT(nombre_entidad) AS 'Cantidad de Jugadores'
-FROM jugador;*/
 
 
 --Gremios sin miembros
