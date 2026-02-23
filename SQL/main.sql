@@ -58,7 +58,7 @@ CREATE TABLE gremio(
     ID_Gremio INT PRIMARY KEY NOT NULL,
     nombre_gremio VARCHAR(50) NOT NULL,
     Fondo INT NOT NULL DEFAULT 0,
-    nombre_entidad_lider VARCHAR(20) NOT NULL, -- Referencia al líder
+    nombre_entidad_lider VARCHAR(20) NOT NULL, -- Referencia al lï¿½der
 
     CONSTRAINT CHK_ID_Gremio CHECK (ID_Gremio BETWEEN 1000 AND 9999),
     CONSTRAINT CHK_fondo CHECK (Fondo >= 0),
@@ -99,12 +99,19 @@ CREATE TABLE mazmorra(
     ID_mazmorra VARCHAR(5) PRIMARY KEY,
     nivel INT NOT NULL,
     ID_Gremio INT,
-    categoria VARCHAR(20),
 
 CONSTRAINT FK_Gremio_Mazmorra FOREIGN KEY (ID_Gremio) 
     REFERENCES gremio(ID_Gremio),
 CONSTRAINT CHK_nivel CHECK (nivel > 0 AND nivel <= 60)
 );
+
+CREATE TABLE mazmorra_categoria(
+    ID_mazmorra VARCHAR(5) NOT NULL PRIMARY KEY,
+    categoria VARCHAR(20) NOT NULL,
+
+    CONSTRAINT FK_Mazmorra_Cat FOREIGN KEY (ID_mazmorra)
+    REFERENCES mazmorra(ID_mazmorra)
+)
 
 CREATE TABLE ventas(
     id_transaccion INT PRIMARY KEY NOT NULL IDENTITY(1,1),
@@ -152,7 +159,7 @@ CREATE TABLE jugador(
 CREATE TABLE Item_mazmorra(
     ID_item VARCHAR(12) NOT NULL,
     ID_mazmorra VARCHAR(5) NOT NULL,
-    drop_rate INT DEFAULT 1 NOT NULL, -- El porcentaje de drop ahora vive aquí
+    drop_rate INT DEFAULT 1 NOT NULL, -- El porcentaje de drop ahora vive aquï¿½
 
     CONSTRAINT PK_Item_mazmorra PRIMARY KEY (ID_item, ID_mazmorra),
     CONSTRAINT FK_Item_IM FOREIGN KEY (ID_item) REFERENCES item(ID_item),
@@ -451,7 +458,7 @@ BEGIN
     WHERE id_transaccion = @id_transaccion AND id_item = @id_item
 END
 
-GO
+GO;
 
 CREATE PROCEDURE Borrar_Detalle_Venta
 @id_transaccion INT,
@@ -462,7 +469,7 @@ BEGIN
     WHERE id_transaccion = @id_transaccion AND id_item = @id_item
 END
 
-GO
+GO;
 
 --  Tabla jugador
 
@@ -474,7 +481,7 @@ BEGIN
     INSERT INTO jugador (nombre_entidad, ID_gremio)
     VALUES (@nombre_entidad, @ID_gremio)
 END
-GO
+GO;
 
 CREATE PROCEDURE Modificar_jugador
     @nombre_entidad VARCHAR(20),
@@ -485,7 +492,7 @@ BEGIN
     SET ID_gremio = @ID_gremio
     WHERE nombre_entidad = @nombre_entidad
 END
-GO
+GO;
 
 CREATE PROCEDURE Borrar_jugador
     @nombre_entidad VARCHAR(20)
@@ -494,7 +501,7 @@ BEGIN
     DELETE FROM jugador
     WHERE nombre_entidad = @nombre_entidad
 END
-GO
+GO;
 
 --  Tabla Mazmorra
 
@@ -510,7 +517,7 @@ BEGIN
     VALUES (@ID_mazmorra, @nivel, @ID_Gremio, @categoria)
 END
 
-GO
+GO;
 
 CREATE PROCEDURE Modificar_Mazmorra
 @ID_mazmorra VARCHAR(5),
@@ -526,7 +533,7 @@ BEGIN
     WHERE ID_mazmorra = @ID_mazmorra
 END
 
-GO
+GO;
 
 CREATE PROCEDURE Borrar_Mazmorra
 @ID_mazmorra VARCHAR(5)
@@ -536,7 +543,7 @@ BEGIN
     WHERE ID_mazmorra = @ID_mazmorra
 END
 
-GO
+GO;
 
 --  Tabla Item_Entidad
 
@@ -549,7 +556,7 @@ BEGIN
     VALUES (@id_item, @nombre_entidad)
 END
 
-GO
+GO;
 
 CREATE PROCEDURE Modificar_item_entidad
 @id_item VARCHAR(12),
@@ -562,7 +569,7 @@ BEGIN
     WHERE id_item = @id_item AND nombre_entidad = @nombre_entidad
 END
 
-GO
+GO;
 
 CREATE PROCEDURE Borrar_item_entidad
 @id_item VARCHAR(12),
@@ -573,26 +580,26 @@ BEGIN
     WHERE id_item = @id_item AND nombre_entidad = @nombre_entidad
 END
 
-GO
+GO;
 
 --  Tabla Item_Mazmorra
 
 CREATE PROCEDURE Insertar_item_mazmorra
 @ID_item VARCHAR(12),
 @ID_mazmorra VARCHAR(5),
-@drop_rate INT -- Agregamos este parámetro
+@drop_rate INT -- Agregamos este parï¿½metro
 AS
 BEGIN
     INSERT INTO item_mazmorra (ID_item, ID_mazmorra, drop_rate)
     VALUES (@ID_item, @ID_mazmorra, @drop_rate)
 END
 
-GO
+GO;
 
 CREATE PROCEDURE Modificar_item_mazmorra
 @ID_item VARCHAR(12),
 @ID_mazmorra VARCHAR(5),
-@nuevo_drop_rate INT -- Agregamos el parámetro que realmente queremos cambiar
+@nuevo_drop_rate INT -- Agregamos el parï¿½metro que realmente queremos cambiar
 AS
 BEGIN
     UPDATE item_mazmorra
@@ -600,7 +607,7 @@ BEGIN
     WHERE ID_item = @ID_item AND ID_mazmorra = @ID_mazmorra
 END
 
-GO
+GO;
 
 CREATE PROCEDURE Borrar_item_mazmorra
 @ID_item VARCHAR(12),
@@ -611,7 +618,41 @@ BEGIN
     WHERE ID_item = @ID_item AND ID_mazmorra = @ID_mazmorra
 END
 
-GO
+GO;
+
+CREATE PROCEDURE Crear_mazmorra_categoria
+@ID_mazmorra VARCHAR(5),
+@categoria VARCHAR(20)
+AS
+BEGIN
+    INSERT INTO mazmorra_categoria (ID_mazmorra, categoria)
+    VALUES (@ID_mazmorra, @categoria)
+END
+
+GO;
+
+CREATE PROCEDURE Modificar_Mazmorra_Categoria
+@ID_mazmorra VARCHAR(5),
+@categoria VARCHAR(20)
+AS
+BEGIN
+    UPDATE mazmorra_categoria
+    SET categoria = @categoria
+    WHERE ID_mazmorra = @ID_mazmorra and categoria = @categoria
+END
+
+GO;
+
+CREATE PROCEDURE Borrar_Mazmorra_Categoria
+@ID_mazmorra VARCHAR(5),
+@categoria VARCHAR(20)
+AS
+BEGIN
+    DELETE FROM mazmorra_categoria
+    WHERE ID_mazmorra = @ID_mazmorra and categoria = @categoria
+END
+
+GO;
 
 -- VISTAS
 
@@ -829,7 +870,7 @@ LEFT JOIN jugador j ON j.ID_gremio = g.ID_Gremio
 WHERE j.nombre_entidad IS NULL;
 
 
---Miembros de un gremio específico
+--Miembros de un gremio especï¿½fico
 
 DECLARE @ID_Gremio INT = 1000; -- Cambiar por el que quieran
 
@@ -843,7 +884,7 @@ JOIN gremio g ON j.ID_gremio = g.ID_Gremio
 WHERE j.ID_gremio = @ID_Gremio;
 
 
--- Items de grado máximo
+-- Items de grado mï¿½ximo
 
 SELECT *
 FROM item
