@@ -79,7 +79,7 @@ CREATE TABLE entidad_tipo(
     REFERENCES entidad(nombre_entidad),
 
     CONSTRAINT FK_tipo_entidad FOREIGN KEY (identificador_tipo)
-    REFERENCES tipo_entidad(identificador_tipo),
+    REFERENCES tipo_entidad(identificador_tipo)
 );
 
 CREATE TABLE item_entidad(
@@ -93,7 +93,7 @@ CREATE TABLE item_entidad(
     REFERENCES item(ID_item),
 
     CONSTRAINT FK_entidad_item FOREIGN KEY (nombre_entidad)
-    REFERENCES entidad(nombre_entidad),
+    REFERENCES entidad(nombre_entidad)
 );
 GO
 
