@@ -653,9 +653,9 @@ BEGIN
 END
 
 GO
-
+--=====================================================================================================================
 -- VISTAS
-
+--=====================================================================================================================
 -- Integrantes de los gremios
 CREATE OR ALTER VIEW VW_Gremio_Integrantes AS
 SELECT 
@@ -842,10 +842,10 @@ FROM item i
 LEFT JOIN item_entidad ie ON i.ID_item = ie.ID_item;
 GO
 
-
+--=====================================================================================================================
 -- CONSULTAS
-
--- Promedio de oro por jugador
+--=====================================================================================================================
+/*-- Promedio de oro por jugador -- cambiara vista
 
 SELECT 
 AVG(e.oro_disponible) AS 'Promedio Oro de Jugadores'
@@ -860,36 +860,34 @@ SELECT TOP 5
     nombre_entidad,
     oro_disponible
 FROM entidad
-ORDER BY oro_disponible DESC;
+ORDER BY oro_disponible DESC;*/
 
 
--- Top 5 gremios mas ricos
+-- Top 5 gremios mas ricos -- se hace con los jugadores de cada gremio
 
 SELECT TOP 5
-Nombre_Gremio,
-Fondo
-
-FROM gremio
-
-ORDER BY Fondo DESC
-
-
---Cantidad de items por tipo
-
-SELECT i.tipo, COUNT(i.tipo) AS Cantidad
-FROM item AS i
-GROUP BY i.tipo
+    g.nombre_gremio,
+    SUM(e.oro_disponible) AS riqueza_miembros
+FROM gremio g
+JOIN jugador j ON g.ID_Gremio = j.ID_gremio
+JOIN entidad e ON j.nombre_entidad = e.nombre_entidad
+GROUP BY g.nombre_gremio
+ORDER BY riqueza_miembros DESC;
 
 
---Cantidad total de jugadores
+-- Gremios controlan mazmorras alto nivel
+SELECT g.nombre_gremio, m.ID_mazmorra, m.nivel
+FROM gremio g
+JOIN mazmorra m ON g.ID_Gremio = m.ID_Gremio
+WHERE m.nivel > 40
+ORDER BY m.nivel DESC;
+
+
+/*
+--Cantidad total de jugadores --pasar a vista
 
 SELECT COUNT(nombre_entidad) AS 'Cantidad de Jugadores'
-FROM jugador;
-
---Promedio de valor de items
-
-SELECT AVG(i.valor) AS 'Promedio valor items'
-FROM item as i
+FROM jugador;*/
 
 
 --Gremios sin miembros
@@ -900,9 +898,9 @@ LEFT JOIN jugador j ON j.ID_gremio = g.ID_Gremio
 WHERE j.nombre_entidad IS NULL;
 
 
---Miembros de un gremio espec�fico
+--Miembros de un gremio especifico
 
-DECLARE @ID_Gremio INT = 1000; -- Cambiar por el que quieran
+DECLARE @ID_Gremio INT = 10; -- Cambiar por el que quieran
 
 SELECT 
     j.nombre_entidad AS Jugador,
@@ -914,11 +912,95 @@ JOIN gremio g ON j.ID_gremio = g.ID_Gremio
 WHERE j.ID_gremio = @ID_Gremio;
 
 
--- Items de grado m�ximo
+--5 npcs con mas items
+SELECT TOP 5
+    et.nombre_entidad AS NPC_Nombre,
+    COUNT(ie.ID_item) AS Cantidad_Items_Poseidos
+FROM entidad_tipo et
+JOIN item_entidad ie ON et.nombre_entidad = ie.nombre_entidad
+WHERE et.identificador_tipo = 'NPC'
+GROUP BY et.nombre_entidad
+ORDER BY Cantidad_Items_Poseidos DESC;
 
-SELECT *
-FROM item
-WHERE grado = (
-    SELECT MAX(grado)
-    FROM item
+-- Item mas caro de cada categoria
+SELECT tipo, ID_item, valor
+FROM item i1
+WHERE valor = (
+    SELECT MAX(valor)
+    FROM item i2
+    WHERE i1.tipo = i2.tipo
 );
+
+
+-- ANTI CHEAT
+
+-- jugadores con oro sospechoso
+SELECT nombre_entidad, oro_disponible
+FROM entidad
+WHERE oro_disponible > (SELECT AVG(oro_disponible) * 10 FROM entidad)
+AND nombre_entidad IN (SELECT nombre_entidad FROM jugador);
+
+-- transferencias de oro masivo
+SELECT id_transaccion, nombre_entidad_vendedor, nombre_entidad_comprador, oro_intercambiado, timestamp
+FROM ventas
+WHERE oro_intercambiado > 500000
+ORDER BY oro_intercambiado DESC;
+
+--NPC con ventas de alto valor
+SELECT DISTINCT v.nombre_entidad_vendedor, v.oro_intercambiado
+FROM ventas v
+WHERE v.oro_intercambiado > 10000
+AND v.nombre_entidad_vendedor IN (
+    SELECT nombre_entidad 
+    FROM entidad_tipo 
+    WHERE identificador_tipo = 'NPC'
+);
+
+--LAVADO DE ORO 
+SELECT 
+    v.id_transaccion, 
+    v.nombre_entidad_vendedor, 
+    v.nombre_entidad_comprador, 
+    v.oro_intercambiado, 
+    i.valor AS valor_real_item,
+    (v.oro_intercambiado - i.valor) AS sobreprecio_sospechoso
+FROM ventas v
+JOIN Detalle_Venta dv ON v.id_transaccion = dv.id_transaccion
+JOIN item i ON dv.id_item = i.ID_item
+WHERE v.oro_intercambiado > (i.valor * 50) -- Se pagó 50 veces más de lo que vale
+AND i.valor > 0;
+
+--ANTI MERCADO NEGRO (detectar jugadores que puedan hacer ventas por dinero real)
+SELECT 
+    v.id_transaccion,
+    v.nombre_entidad_vendedor AS Donante_Sospechoso,
+    v.nombre_entidad_comprador AS Receptor_Beneficiado,
+    i.ID_item,
+    i.valor AS Valor_Real_Mercado,
+    v.oro_intercambiado AS Oro_Pagado_En_Juego,
+    v.timestamp
+FROM ventas v
+JOIN Detalle_Venta dv ON v.id_transaccion = dv.id_transaccion
+JOIN item i ON dv.id_item = i.ID_item
+WHERE v.oro_intercambiado < (i.valor * 0.01) -- Se vendió por menos del 1% de su valor
+  AND i.valor > 10000                      -- Solo buscar ítems que realmente valgan la pena
+ORDER BY i.valor DESC;
+
+
+--ECONOMAN
+
+--indice de inflacion (mucha emision monetaria)
+SELECT 
+    (SELECT SUM(oro_disponible) FROM entidad) AS Oro_en_Jugadores,
+    (SELECT SUM(Fondo) FROM gremio) AS Oro_en_Gremios,
+    (SELECT SUM(oro_disponible) FROM entidad) + (SELECT SUM(Fondo) FROM gremio) AS Masa_Monetaria_Total;
+
+--detectar mazmorras OP
+SELECT 
+    m.ID_mazmorra, 
+    AVG(i.valor * (im.drop_rate / 100.0)) AS Valor_Esperado_Por_Run
+FROM mazmorra m
+JOIN Item_mazmorra im ON m.ID_mazmorra = im.ID_mazmorra
+JOIN item i ON im.ID_item = i.ID_item
+GROUP BY m.ID_mazmorra
+ORDER BY Valor_Esperado_Por_Run DESC;
