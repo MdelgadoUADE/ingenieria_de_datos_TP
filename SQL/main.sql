@@ -747,7 +747,7 @@ GO
 
 -- Jugadores con la info de sus items
 
-CREATE VIEW Jugadores_Items AS
+CREATE VIEW Jugadores_Items_Elite AS
 SELECT
     e.nombre_entidad AS Nombre,
     it.ID_item,
@@ -755,8 +755,9 @@ SELECT
     it.tipo,
     it.valor
 FROM item it
-JOIN item_entidad ie on it.ID_Item = ie.ID_Item
-JOIN entidad e ON ie.nombre_entidad = e.nombre_entidad;
+JOIN item_entidad ie ON it.ID_item = ie.ID_item
+JOIN entidad e ON ie.nombre_entidad = e.nombre_entidad
+WHERE it.grado > 50;
 GO
 
 -- Inventario completo de jugadores
