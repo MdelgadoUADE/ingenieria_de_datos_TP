@@ -1,10 +1,3 @@
-/*
-usar para probar errores de ejecucion:
-(cerrar diagramas)
-use master
-drop database main_runescape;
-*/
-
 CREATE DATABASE main_runescape
 GO
 
@@ -916,7 +909,7 @@ WHERE j.nombre_entidad IS NULL;
 
 --Miembros de un gremio especifico
 
-DECLARE @ID_Gremio INT = 10; -- Cambiar por el que quieran
+DECLARE @ID_Gremio INT = 1001; -- Cambiar por el que quieran
 
 SELECT 
     j.nombre_entidad AS Jugador,
@@ -939,7 +932,7 @@ GROUP BY et.nombre_entidad
 ORDER BY Cantidad_Items_Poseidos DESC;
 
 -- Item mas caro de cada categoria
-SELECT tipo, ID_item, valor
+SELECT i1.tipo, i1.ID_item, i1.valor
 FROM item i1
 WHERE valor = (
     SELECT MAX(valor)
@@ -1013,12 +1006,18 @@ JOIN item i ON im.ID_item = i.ID_item
 GROUP BY m.ID_mazmorra
 ORDER BY Valor_Esperado_Por_Run DESC;
 
+
+--=============================================================================================================
+-- TESTEO
+--=============================================================================================================
+
 EXEC Insertar_Item 'ES2363236589', 1, 'Espada', 100
 EXEC Insertar_Item 'AR0213462956', 2, 'Armadura', 250
 EXEC Insertar_Item 'PO0213562968', 3, 'Pocion', 50
 EXEC Insertar_Item 'AN0213462956', 4, 'Anillo', 180
 EXEC Insertar_Item 'EQ6985696323', 5, 'Estoque', 500
 EXEC Insertar_Item 'ESGREYSKULL1', 6, 'Espada', 200
+GO
 
 EXEC Insertar_Propiedades 'ES2363236589', 'Fuego'
 EXEC Insertar_Propiedades 'AR0213462956', 'Defensa'
@@ -1026,6 +1025,7 @@ EXEC Insertar_Propiedades 'PO0213562968', 'Curacion'
 EXEC Insertar_Propiedades 'AN0213462956', 'Velocidad'
 EXEC Insertar_Propiedades 'EQ6985696323', 'Critico'
 EXEC Insertar_Propiedades 'ESGREYSKULL1', 'Fuego'
+GO
 
 EXEC Insertar_historial_precio 'ES2363236589', 90
 EXEC Insertar_historial_precio 'AR0213462956', 240
@@ -1033,12 +1033,7 @@ EXEC Insertar_historial_precio 'PO0213562968', 45
 EXEC Insertar_historial_precio 'AN0213462956', 170
 EXEC Insertar_historial_precio 'EQ6985696323', 480
 EXEC Insertar_historial_precio 'ESGREYSKULL1', 9999999
-
-EXEC Insertar_gremio 1001, 'El Imperio Latino', 5000, 'xXxArthurxXx'
-EXEC Insertar_gremio 2002, 'R0yals', 3000, 'Luna<3'
-EXEC Insertar_gremio 3003, 'Rebel Kings', 7000, 'Thor'
-EXEC Insertar_gremio 4004, 'Yama', 6000, 'Helios'
-EXEC Insertar_gremio 5005, 'OnlyFEs', 2000, 'Nyx'
+GO
 
 EXEC Insertar_entidad 'xXxArthurxXx', 1200
 EXEC Insertar_entidad 'Luna<3', 900
@@ -1046,11 +1041,13 @@ EXEC Insertar_entidad 'Thor', 1500
 EXEC Insertar_entidad 'Helios', 2000
 EXEC Insertar_entidad 'Nyx', 800
 EXEC Insertar_entidad 'GustavoEscandell', 9999999
+GO
 
 EXEC Insertar_tipo_entidad 'JUG'
 EXEC Insertar_tipo_entidad 'NPC'
 EXEC Insertar_tipo_entidad 'BOS'
 EXEC Insertar_tipo_entidad 'ADM'
+GO
 
 EXEC Insertar_entidad_tipo 'JUG', 'xXxArthurxXx'
 EXEC Insertar_entidad_tipo 'JUG', 'Luna<3'
@@ -1058,6 +1055,14 @@ EXEC Insertar_entidad_tipo 'JUG', 'Thor'
 EXEC Insertar_entidad_tipo 'NPC', 'Helios'
 EXEC Insertar_entidad_tipo 'NPC', 'Nyx'
 EXEC Insertar_entidad_tipo 'JUG', 'GustavoEscandell'
+GO
+
+EXEC Insertar_gremio 1001, 'El Imperio Latino', 5000, 'xXxArthurxXx'
+EXEC Insertar_gremio 2002, 'R0yals', 3000, 'Luna<3'
+EXEC Insertar_gremio 3003, 'Rebel Kings', 7000, 'Thor'
+EXEC Insertar_gremio 4004, 'Yama', 6000, 'Helios'
+EXEC Insertar_gremio 5005, 'OnlyFEs', 2000, 'Nyx'
+GO
 
 EXEC Insertar_Venta 'xXxArthurxXx', 'Luna<3', 200, 0
 EXEC Insertar_Venta 'Luna<3', 'Thor', 150, 0
@@ -1066,6 +1071,7 @@ EXEC Insertar_Venta 'Helios', 'Nyx', 400, 0
 EXEC Insertar_Venta 'Nyx', 'xXxArthurxXx', 100, 0
 EXEC Insertar_Venta 'GustavoEscandell', 'Luna<3', 10000000, 0
 EXEC Modificar_Venta 6, 'GustavoEscandell', 'Luna<3', 1000000000, 0
+GO
 
 EXEC Insertar_Detalle_Venta 1, 'ES2363236589'
 EXEC Insertar_Detalle_Venta 2, 'AR0213462956'
@@ -1073,7 +1079,7 @@ EXEC Insertar_Detalle_Venta 3, 'PO0213562968'
 EXEC Insertar_Detalle_Venta 4, 'AN0213462956'
 EXEC Insertar_Detalle_Venta 5, 'EQ6985696323'
 EXEC Insertar_Detalle_Venta 6, 'ESGREYSKULL1'
-
+GO
 
 EXEC Insertar_jugador_sin_gremio 'xXxArthurxXx'
 EXEC Insertar_jugador_sin_gremio 'Luna<3'
@@ -1086,12 +1092,14 @@ EXEC Modificar_jugador 'Luna<3', 2002
 EXEC Modificar_jugador 'Thor', 3003
 EXEC Modificar_jugador 'Helios', 4004
 EXEC Modificar_jugador 'Nyx', 5005
+GO
 
 EXEC Insertar_Mazmorra_sin_gremio 'MZ001', 5
 EXEC Insertar_Mazmorra_sin_gremio 'MZ002', 10
 EXEC Insertar_Mazmorra_sin_gremio 'MZ003', 15
 EXEC Insertar_Mazmorra 'MZ004', 20, 4004
 EXEC Insertar_Mazmorra 'MZ005', 25, 5005
+GO
 
 EXEC Insertar_item_entidad 'ES2363236589', 'xXxArthurxXx'
 EXEC Insertar_item_entidad 'AR0213462956', 'Luna<3'
@@ -1099,9 +1107,11 @@ EXEC Insertar_item_entidad 'PO0213562968', 'Thor'
 EXEC Insertar_item_entidad 'AN0213462956', 'Helios'
 EXEC Insertar_item_entidad 'EQ6985696323', 'Nyx'
 EXEC Insertar_item_entidad 'ESGREYSKULL1', 'GustavoEscandell'
+GO
 
 EXEC Crear_mazmorra_categoria 'MZ001', 'Estoque'
 EXEC Crear_mazmorra_categoria 'MZ002', 'Espada'
 EXEC Crear_mazmorra_categoria 'MZ003', 'Pocion'
 EXEC Crear_mazmorra_categoria 'MZ004', 'Anillo'
 EXEC Crear_mazmorra_categoria 'MZ005', 'Pocion'
+GO
