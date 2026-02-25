@@ -1,0 +1,12 @@
+Este proyecto consiste en el diseño e implementación de una base de datos relacional para un sistema MMORPG inspirado en RuneScape, enfocado en:
+
+-Gestión de ítems únicos
+-Economía dinámica del juego
+-Compra/Venta entre jugadores
+-Tiendas NPC
+-Gremios
+-Mazmorras
+-Auditoría de cambios
+-Seguimiento histórico de precios
+
+El modelo fue normalizado hasta La Forma Normal de Boyce-Codd y desarrollado en SQL Server.
